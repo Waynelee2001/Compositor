@@ -39,7 +39,8 @@ struct CameraRawCurveControls: View {
                 amount("Shadows", \.shadows, "Lifts or lowers the darkest tones.")
             } else {
                 if let point = selectedPoint {
-                    Text("In \(Int((point.x * 255).rounded()))   Out \(Int((point.y * 255).rounded()))")
+                    Text(String(format: "In %@   Out %@".localizedUI,
+                    String(Int((point.x * 255).rounded())), String(Int((point.y * 255).rounded()))))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                         .help("Input and output of the selected curve point.")
@@ -315,7 +316,7 @@ struct CameraRawMixerControls: View {
 
     private func familySlider(_ index: Int) -> some View {
         let key = mixerKey
-        let help = "\((edit?.cameraRawMixerTab ?? .hue).rawValue) of \(CameraRawMixerSettings.names[index])."
+        let help = (edit?.cameraRawMixerTab ?? .hue).rawValue.localizedUI + " · " + CameraRawMixerSettings.names[index].localizedUI
         return HStack {
             Text(CameraRawMixerSettings.names[index].localizedUI).frame(width: 78, alignment: .leading).help(help)
                 .scrubbable(sensitivity: 1,
@@ -348,7 +349,7 @@ struct CameraRawMixerControls: View {
                         .overlay { Circle().stroke(edit?.cameraRawMixerSwatch == index ? Color.white : Color.clear, lineWidth: 2) }
                 }
                 .buttonStyle(.plain)
-                .help("Edit \(CameraRawMixerSettings.names[index]).")
+                .help("Edit ".localizedUI + CameraRawMixerSettings.names[index].localizedUI + ".")
             }
         }
     }
