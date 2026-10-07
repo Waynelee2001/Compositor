@@ -5,9 +5,14 @@ import Sparkle
 struct CompositorApp: App {
     @NSApplicationDelegateAdaptor(CompositorApplicationDelegate.self) private var applicationDelegate
     private var session: EditorSession { applicationDelegate.session }
+    @AppStorage("appLanguage") private var appLanguageRawValue = AppLanguage.system.rawValue
+    private var appLanguage: AppLanguage { AppLanguage(rawValue: appLanguageRawValue) ?? .system }
+
     var body: some Scene {
         Window("Compositor", id: "editor") {
-            ProjectWorkspaceView(applicationDelegate: applicationDelegate).roundedControls()
+            ProjectWorkspaceView(applicationDelegate: applicationDelegate)
+                .roundedControls()
+                .environment(\.locale, appLanguage.locale)
         }
             .defaultSize(width: 1180, height: 780)
             // Files opened from Finder or dropped on the Dock icon go to the app delegate, which imports them into
@@ -341,5 +346,9 @@ struct CompositorApp: App {
                         .disabled(!session.canEditLayers || session.activeLayer == nil)
                 }
             }
+        Settings {
+            AppLanguageSettingsView()
+                .environment(\.locale, appLanguage.locale)
+        }
     }
 }
