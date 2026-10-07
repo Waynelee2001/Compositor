@@ -9320,6 +9320,226 @@
           }
         }
       }
+    },
+    "Cropped to the canvas so the file fits in memory. Pixels outside the canvas weren't imported.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为了使文件适应内存限制，内容已裁剪到画布范围。画布外的像素未被导入。"
+          }
+        }
+      }
+    },
+    "The smart object was rasterized. Linked contents can’t be edited.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智能对象已栅格化，链接内容无法继续编辑。"
+          }
+        }
+      }
+    },
+    "Layer effects were discarded, so the appearance may differ.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图层效果已被丢弃，因此外观可能与 Photoshop 中不同。"
+          }
+        }
+      }
+    },
+    "Vector shape was rasterized to pixels.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "矢量形状已栅格化为像素。"
+          }
+        }
+      }
+    },
+    "This Photoshop layer type isn’t supported and was imported as pixels.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不支持此 Photoshop 图层类型，已按像素图层导入。"
+          }
+        }
+      }
+    },
+    "Folder blend mode “%@” isn’t supported. The folder will be pass-through.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不支持文件夹混合模式“%@”。该文件夹将使用穿透模式。"
+          }
+        }
+      }
+    },
+    "Blend mode “%@” isn’t supported and will be applied as Normal.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不支持混合模式“%@”，将按“正常”模式处理。"
+          }
+        }
+      }
+    },
+    "This adjustment type isn’t supported and was skipped.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不支持此调整类型，已跳过。"
+          }
+        }
+      }
+    },
+    "Adjustment parameters may not match Photoshop exactly.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调整参数可能无法与 Photoshop 完全一致。"
+          }
+        }
+      }
+    },
+    "The layer mask couldn’t be converted to 8-bit grayscale and was skipped.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图层蒙版无法转换为 8 位灰度，已跳过。"
+          }
+        }
+      }
+    },
+    "This clipping mask’s base isn’t supported, so clipping was skipped.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不支持此剪贴蒙版的基底，因此已跳过剪贴关系。"
+          }
+        }
+      }
+    },
+    "Editable Photoshop text becomes pixels and can’t be retyped.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可编辑的 Photoshop 文字已转换为像素，无法继续重新输入编辑。"
+          }
+        }
+      }
+    },
+    "Only the first text style was kept.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅保留了第一种文字样式。"
+          }
+        }
+      }
+    },
+    "The Photoshop text warp was omitted.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photoshop 的文字变形效果已省略。"
+          }
+        }
+      }
+    },
+    "Faux bold or faux italic was omitted.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伪粗体或伪斜体效果已省略。"
+          }
+        }
+      }
+    },
+    "Full justification was imported as left alignment.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "两端对齐已按左对齐导入。"
+          }
+        }
+      }
+    },
+    "The font “%@” isn’t installed, so the text was drawn with the system font.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未安装字体“%@”，文字已使用系统字体绘制。"
+          }
+        }
+      }
+    },
+    "The Photoshop file could not be read. It may be damaged or incomplete.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取 Photoshop 文件。文件可能已损坏或不完整。"
+          }
+        }
+      }
+    },
+    "This Photoshop file uses a format version Compositor can’t read.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该 Photoshop 文件使用了 Compositor 无法读取的格式版本。"
+          }
+        }
+      }
+    },
+    "Only 8-bit RGB Photoshop files can be imported.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅支持导入 8 位 RGB Photoshop 文件。"
+          }
+        }
+      }
+    },
+    "This Photoshop file uses a layer compression method that isn’t supported.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该 Photoshop 文件使用了不受支持的图层压缩方式。"
+          }
+        }
+      }
+    },
+    "The Photoshop stroke isn’t supported on shape layers and was omitted.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "形状图层上的 Photoshop 描边暂不支持，已省略。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
