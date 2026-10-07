@@ -66,6 +66,7 @@ struct AppLanguageSettingsView: View {
     }
     private var languageForm: some View {
         Form {
+            AppThemePicker()
             Picker("Application Language", selection: language) {
                 ForEach(AppLanguage.allCases) { language in Text(language.displayName).tag(language) }
             }.pickerStyle(.menu)

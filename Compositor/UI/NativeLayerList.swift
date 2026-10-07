@@ -1327,7 +1327,7 @@ extension LayerThumbnailButton {
 private final class RowEdgeLine: NSView {
     override func draw(_ dirtyRect: NSRect) {
         let scale = window?.backingScaleFactor ?? 2
-        NSColor.white.withAlphaComponent(0.06).setFill()
+        NSColor.labelColor.withAlphaComponent(0.06).setFill()
         NSRect(x: 0, y: 0, width: bounds.width, height: 1 / scale).fill()
     }
     override func hitTest(_ point: NSPoint) -> NSView? { nil }

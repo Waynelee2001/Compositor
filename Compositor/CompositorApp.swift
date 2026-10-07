@@ -349,6 +349,7 @@ struct CompositorApp: App {
         Settings {
             AppLanguageSettingsView()
                 .environment(\.locale, appLanguage.locale)
+                .modifier(AppAppearanceModifier())
         }
     }
 }

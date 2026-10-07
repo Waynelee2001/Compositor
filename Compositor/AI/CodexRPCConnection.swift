@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(Darwin)
+import Darwin
+#endif
 
 /// One app-owned `codex app-server` child; stdout contains JSONL only.
 /// No terminal scraping, HTTP listener, or MCP bridge is involved.
@@ -16,6 +19,7 @@ final class CodexRPCConnection {
     private let writer = DispatchQueue(label: "compositor.codex.stdin")
     private var sequence = 0
     private var generation = UUID()
+    private var providerSecret: String?
     private struct Pending {
         let continuation: CheckedContinuation<CodexJSON, Error>
         let timer: Task<Void, Never>
@@ -23,7 +27,7 @@ final class CodexRPCConnection {
     private var pending: [String: Pending] = [:]
     var isRunning: Bool { child?.process.isRunning == true }
 
-    func launch(executable: URL, home: URL, workspace: URL) throws {
+    func launch(executable: URL, home: URL, workspace: URL, profile: AIProviderProfile? = nil, apiKey: String? = nil) throws {
         disconnect()
         let child = CodexChildProcess()
         self.child = child
@@ -44,7 +48,23 @@ final class CodexRPCConnection {
         environment["CODEX_HOME"] = home.path
         environment["PATH"] = [executable.deletingLastPathComponent().path,
                                "/opt/homebrew/bin", "/usr/local/bin", environment["PATH"] ?? "/usr/bin:/bin"].joined(separator: ":")
+        if let profile, profile.kind == .responses {
+            let validated = try profile.validated()
+            let key = apiKey?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !validated.requiresKey || !key.isEmpty else {
+                throw CodexRuntimeError(message: "Save an API key for this provider in AI settings.")
+            }
+            let catalog = home.appendingPathComponent("models-" + UUID().uuidString + ".json")
+            try validated.catalog().data().write(to: catalog, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: catalog.path)
+            let overrides = try validated.launchOverrides(catalog: catalog).filter { !key.isEmpty || !$0.contains(".env_key=") }
+            process.arguments! += overrides.flatMap { ["-c", $0] }
+            if !key.isEmpty { environment["COMPOSITOR_PROVIDER_KEY"] = key; providerSecret = key }
+        }
         process.environment = environment
+        #if canImport(Darwin)
+        _ = fcntl(child.input.fileHandleForWriting.fileDescriptor, F_SETNOSIGPIPE, 1)
+        #endif
         process.standardInput = child.input
         process.standardOutput = child.output
         process.standardError = child.errors
@@ -113,14 +133,26 @@ final class CodexRPCConnection {
     }
     private func receive(_ message: CodexJSON) {
         if let method = message["method"].string {
-            if message["id"].requestKey != nil { onRequest?(message["id"], method, message["params"]) }
-            else { onNotification?(method, message["params"]) }
+            if message["id"].requestKey != nil { onRequest?(message["id"], method, sanitized(message["params"])) }
+            else { onNotification?(method, sanitized(message["params"])) }
             return
         }
         guard let key = message["id"].requestKey else { return }
         if message["error"] != .null {
-            complete(key, .failure(CodexRuntimeError(message: message["error"]["message"].string ?? "Codex RPC failed.")))
+            complete(key, .failure(CodexRuntimeError(message: sanitized(message["error"]["message"].string ?? "Codex RPC failed."))))
         } else { complete(key, .success(message["result"])) }
+    }
+    private func sanitized(_ value: CodexJSON) -> CodexJSON {
+        switch value {
+        case .string(let text): return .string(sanitized(text))
+        case .array(let items): return .array(items.map { sanitized($0) })
+        case .object(let fields): return .object(fields.mapValues { sanitized($0) })
+        default: return value
+        }
+    }
+    private func sanitized(_ value: String) -> String {
+        guard let providerSecret, !providerSecret.isEmpty else { return value }
+        return value.replacingOccurrences(of: providerSecret, with: "[redacted]")
     }
     private func complete(_ key: String, _ result: Result<CodexJSON, Error>) {
         guard let request = pending.removeValue(forKey: key) else { return }
@@ -130,7 +162,7 @@ final class CodexRPCConnection {
     func disconnect() {
         generation = UUID()
         reader?.cancel(); reader = nil
-        child?.stop(); child = nil
+        child?.stop(); child = nil; providerSecret = nil
         parser = CodexJSONLines()
         let requests = pending; pending.removeAll()
         for request in requests.values {

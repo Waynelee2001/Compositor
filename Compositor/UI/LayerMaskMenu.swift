@@ -40,9 +40,9 @@ final class MaskAloneBadgeView: NSView {
         icon.symbolConfiguration = .init(pointSize: 11, weight: .regular)
         let title = NSTextField(labelWithString: "Layer Mask")
         title.font = .systemFont(ofSize: 12, weight: .semibold)
-        title.textColor = .white
+        title.textColor = .labelColor
         name.font = .systemFont(ofSize: 12)
-        name.textColor = NSColor.white.withAlphaComponent(0.6)
+        name.textColor = NSColor.secondaryLabelColor
         name.lineBreakMode = .byTruncatingTail
         let button = NSButton(image: NSImage(systemSymbolName: "xmark", accessibilityDescription: "Stop viewing the mask") ?? NSImage(),
                               target: nil, action: nil)
@@ -55,11 +55,11 @@ final class MaskAloneBadgeView: NSView {
         super.init(frame: .zero)
         button.target = self
         button.action = #selector(closeClicked)
-        icon.contentTintColor = .white
-        button.contentTintColor = .white
+        icon.contentTintColor = .labelColor
+        button.contentTintColor = .labelColor
         wantsLayer = true
-        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.75).cgColor
-        layer?.borderColor = NSColor.white.withAlphaComponent(0.14).cgColor
+        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        layer?.borderColor = NSColor.separatorColor.cgColor
         layer?.borderWidth = 1
         layer?.cornerRadius = 13
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -69,6 +69,11 @@ final class MaskAloneBadgeView: NSView {
             stack.centerYAnchor.constraint(equalTo: centerYAnchor), heightAnchor.constraint(equalToConstant: 26),
             name.widthAnchor.constraint(lessThanOrEqualToConstant: 220),
         ])
+    }
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        layer?.borderColor = NSColor.separatorColor.cgColor
     }
     required init?(coder: NSCoder) { nil }
     override var intrinsicContentSize: NSSize { NSSize(width: stack.fittingSize.width, height: 26) }
