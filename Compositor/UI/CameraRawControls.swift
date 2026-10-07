@@ -288,8 +288,8 @@ struct CameraRawControls: View {
             Image(systemName: shown ? "eye" : "eye.slash")
         }
         .buttonStyle(.borderless)
-        .help(shown ? "Hide \(name) in the preview" : "Show \(name) in the preview")
-        .accessibilityLabel(shown ? "Hide \(name)" : "Show \(name)")
+        .help((shown ? "Hide".localizedUI : "Show".localizedUI) + " " + name.localizedUI + " " + "in the preview".localizedUI)
+        .accessibilityLabel((shown ? "Hide".localizedUI : "Show".localizedUI) + " " + name.localizedUI)
     }
 
     private func slider(_ title: String, _ key: WritableKeyPath<CameraRawSettings, Double>, range: ClosedRange<Double>,
