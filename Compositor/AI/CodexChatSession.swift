@@ -103,7 +103,6 @@ final class AgentChatSession {
             try rpc.notify("initialized")
             isConnected = true; resumed = false
             try await refreshAccount()
-            // Catalog failures must not prevent a signed-out user from logging in.
             do { try await refreshModels() }
             catch { if isAuthenticated { errorMessage = error.localizedDescription } }
         } catch {
@@ -171,12 +170,13 @@ final class AgentChatSession {
             if !resumed {
                 if let threadID {
                     let result = try await rpc.request("thread/resume", ["threadId": .string(threadID),
-                        "model": modelID.isEmpty ? .null : .string(modelID), "approvalPolicy": "untrusted", "sandbox": "read-only"])
+                        "model": modelID.isEmpty ? .null : .string(modelID),
+                        "approvalPolicy": .string(CodexRPCConnection.approvalPolicy), "sandbox": "read-only"])
                     restore(result["thread"]["turns"].array)
                 } else {
                     let result = try await rpc.request("thread/start", [
                         "model": modelID.isEmpty ? .null : .string(modelID), "cwd": .string(workspace!.path),
-                        "approvalPolicy": "untrusted", "sandbox": "read-only", "ephemeral": false,
+                        "approvalPolicy": .string(CodexRPCConnection.approvalPolicy), "sandbox": "read-only", "ephemeral": false,
                         "baseInstructions": .string(CodexConfiguration.instructions),
                         "dynamicTools": .array(CodexEditorTools.definitions)])
                     guard let id = result["thread"]["id"].string else { throw CodexRuntimeError(message: "Codex did not return a thread ID.") }
@@ -198,7 +198,6 @@ final class AgentChatSession {
             guard token == epoch else { return }
             errorMessage = error.localizedDescription
             finish(error is CancellationError ? .interrupted : .failed)
-            // A timed-out turn/start can still run remotely. Do not issue a second turn blindly.
             rpc.disconnect(); isConnected = false; isAuthenticated = false; resumed = false
         }
     }

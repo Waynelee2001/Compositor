@@ -30,7 +30,7 @@ def main() -> None:
         if version.returncode != 0:
             raise RuntimeError("Codex binary cannot start: " + version.stderr[-4000:])
         command = [str(binary), "app-server", "--listen", "stdio://"]
-        for override in ['approval_policy="untrusted"', 'sandbox_mode="read-only"', 'web_search="disabled"',
+        for override in ['approval_policy="never"', 'sandbox_mode="read-only"', 'web_search="disabled"',
                          'features.shell_tool=false', 'features.unified_exec=false', 'features.apply_patch_freeform=false',
                          'features.apps=false', 'features.plugins=false', 'mcp_servers={}', 'cli_auth_credentials_store="file"']:
             command += ["-c", override]
@@ -78,7 +78,13 @@ def main() -> None:
             send({"method": "initialized"})
             account = request(2, "account/read", {"refreshToken": False})
             if account.get("account") is not None: raise RuntimeError("Smoke test must use an isolated signed-out home")
-            print("PASS: real Codex initialize -> initialized -> account/read (signed out; no inference)")
+            # No turn/start: validate experimental tool registration without using a model or account.
+            started = request(3, "thread/start", {"cwd": str(work), "approvalPolicy": "never", "sandbox": "read-only",
+                "ephemeral": True, "dynamicTools": [{"type": "function", "name": "compositor_ci_probe",
+                "description": "A host tool used only to validate registration; never executed in this smoke test.",
+                "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}, "deferLoading": False}]})
+            if not started.get("thread", {}).get("id"): raise RuntimeError("Missing thread ID after tool registration")
+            print("PASS: real Codex initialize -> initialized -> account/read -> thread/start with dynamic tool (signed out; no inference)")
         except Exception:
             # This process has an empty private home, no API-key environment, and no login/model call.
             # Never enable this diagnostic stream in the application's authenticated connection.

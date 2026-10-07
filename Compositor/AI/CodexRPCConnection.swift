@@ -4,6 +4,9 @@ import Foundation
 /// No terminal scraping, HTTP listener, or MCP bridge is involved.
 @MainActor
 final class CodexRPCConnection {
+    /// `never` rejects privilege escalation; native editor edits have their own host approval UI.
+    /// Codex 0.160.1 no longer accepts `untrusted` in startup configuration.
+    nonisolated static let approvalPolicy = "never"
     var onNotification: ((String, CodexJSON) -> Void)?
     var onRequest: ((CodexJSON, String, CodexJSON) -> Void)?
     var onDisconnect: ((Error) -> Void)?
@@ -29,7 +32,7 @@ final class CodexRPCConnection {
         process.executableURL = executable
         process.currentDirectoryURL = workspace
         process.arguments = ["app-server", "--listen", "stdio://",
-            "-c", "approval_policy=\"untrusted\"", "-c", "sandbox_mode=\"read-only\"",
+            "-c", "approval_policy=\"\(Self.approvalPolicy)\"", "-c", "sandbox_mode=\"read-only\"",
             "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false",
             "-c", "features.unified_exec=false", "-c", "features.apply_patch_freeform=false",
             "-c", "features.apps=false", "-c", "features.plugins=false", "-c", "mcp_servers={}",
