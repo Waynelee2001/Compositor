@@ -24,14 +24,28 @@ def main() -> None:
             "PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "TMPDIR", "HTTP_PROXY", "HTTPS_PROXY",
             "ALL_PROXY", "NO_PROXY", "SSL_CERT_FILE", "SSL_CERT_DIR"}}
         environment["CODEX_HOME"] = str(home)
+        version = subprocess.run([str(binary), "--version"], cwd=work, env=environment,
+                                 capture_output=True, text=True, timeout=15)
+        print("Codex binary:", version.stdout.strip(), "exit:", version.returncode, flush=True)
+        if version.returncode != 0:
+            raise RuntimeError("Codex binary cannot start: " + version.stderr[-4000:])
         command = [str(binary), "app-server", "--listen", "stdio://"]
         for override in ['approval_policy="untrusted"', 'sandbox_mode="read-only"', 'web_search="disabled"',
                          'features.shell_tool=false', 'features.unified_exec=false', 'features.apply_patch_freeform=false',
                          'features.apps=false', 'features.plugins=false', 'mcp_servers={}', 'cli_auth_credentials_store="file"']:
             command += ["-c", override]
         process = subprocess.Popen(command, cwd=work, env=environment, stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, encoding="utf-8")
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
         messages: queue.Queue[object] = queue.Queue()
+        diagnostics: list[str] = []
+        diagnostics_lock = threading.Lock()
+        def read_errors() -> None:
+            assert process.stderr is not None
+            for line in process.stderr:
+                with diagnostics_lock:
+                    diagnostics.append(line)
+                    while sum(map(len, diagnostics)) > 8000 and len(diagnostics) > 1:
+                        diagnostics.pop(0)
         def read() -> None:
             assert process.stdout is not None
             try:
@@ -40,6 +54,7 @@ def main() -> None:
             except Exception as error: messages.put(error)
             finally: messages.put(EOFError("Codex closed stdout"))
         thread = threading.Thread(target=read, daemon=True); thread.start()
+        error_thread = threading.Thread(target=read_errors, daemon=True); error_thread.start()
         def send(message: dict[str, object]) -> None:
             assert process.stdin is not None
             process.stdin.write(json.dumps(message) + "\n"); process.stdin.flush()
@@ -52,7 +67,8 @@ def main() -> None:
                 if "method" in message and "id" in message:
                     send({"id": message["id"], "error": {"code": -32601, "message": "No tools in smoke test"}})
                 elif message.get("id") == identifier:
-                    if "error" in message: raise RuntimeError(f"{method} failed; no credentials were used")
+                    if "error" in message:
+                        raise RuntimeError(f"{method} failed in isolated signed-out test: {message['error']}")
                     return message.get("result", {})
             raise RuntimeError("Too many notifications without a response")
         try:
@@ -63,14 +79,23 @@ def main() -> None:
             account = request(2, "account/read", {"refreshToken": False})
             if account.get("account") is not None: raise RuntimeError("Smoke test must use an isolated signed-out home")
             print("PASS: real Codex initialize -> initialized -> account/read (signed out; no inference)")
+        except Exception:
+            # This process has an empty private home, no API-key environment, and no login/model call.
+            # Never enable this diagnostic stream in the application's authenticated connection.
+            error_thread.join(timeout=1)
+            with diagnostics_lock:
+                print("Signed-out Codex startup diagnostics:\n" + "".join(diagnostics)[-8000:], flush=True)
+            raise
         finally:
-            if process.stdin is not None: process.stdin.close()
+            if process.stdin is not None:
+                try: process.stdin.close()
+                except BrokenPipeError: pass
             try: process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 process.terminate()
                 try: process.wait(timeout=5)
                 except subprocess.TimeoutExpired: process.kill(); process.wait()
-            thread.join(timeout=1)
+            thread.join(timeout=1); error_thread.join(timeout=1)
 
 if __name__ == "__main__":
     main()
