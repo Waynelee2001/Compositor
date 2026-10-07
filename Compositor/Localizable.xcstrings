@@ -9190,6 +9190,96 @@
           }
         }
       }
+    },
+    "That selection is too detailed to outline. Try a different Tolerance, or turn on Contiguous.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该选区过于复杂，无法生成轮廓。请尝试调整“容差”，或启用“连续”。"
+          }
+        }
+      }
+    },
+    "There isn’t enough memory to make that selection.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内存不足，无法创建该选区。"
+          }
+        }
+      }
+    },
+    "Load Mask Selection": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "载入蒙版选区"
+          }
+        }
+      }
+    },
+    "Load Layer Selection": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "载入图层选区"
+          }
+        }
+      }
+    },
+    "Object Selection requires macOS 14 or later.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "对象选择需要 macOS 14 或更高版本。"
+          }
+        }
+      }
+    },
+    "The object mask could not be rendered.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法渲染对象蒙版。"
+          }
+        }
+      }
+    },
+    "The copied layers exceed this project’s %@-megapixel limit.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制的图层超过了此项目的 %@ 百万像素限制。"
+          }
+        }
+      }
+    },
+    "Copy Layers from Project": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从项目复制图层"
+          }
+        }
+      }
+    },
+    "That shape is too large. A shape can cover up to %@ megapixels.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该形状过大。单个形状最多可覆盖 %@ 百万像素。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
