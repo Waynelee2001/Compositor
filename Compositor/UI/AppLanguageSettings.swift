@@ -24,6 +24,25 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         }
     }
 
+    static var selected: AppLanguage {
+        AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .system
+    }
+
+    private var resolvedLocalization: String {
+        switch self {
+        case .simplifiedChinese: return "zh-Hans"
+        case .english: return "en"
+        case .system:
+            return Locale.preferredLanguages.first?.lowercased().hasPrefix("zh") == true ? "zh-Hans" : "en"
+        }
+    }
+
+    var localizedBundle: Bundle {
+        guard let path = Bundle.main.path(forResource: resolvedLocalization, ofType: "lproj"),
+              let bundle = Bundle(path: path) else { return .main }
+        return bundle
+    }
+
     func applyBundlePreference() {
         switch self {
         case .system:
@@ -76,6 +95,6 @@ struct AppLanguageSettingsView: View {
 extension String {
     /// Localizes a stable English UI/protocol display value without changing the stored raw value.
     var localizedUI: String {
-        NSLocalizedString(self, comment: "")
+        AppLanguage.selected.localizedBundle.localizedString(forKey: self, value: self, table: nil)
     }
 }
