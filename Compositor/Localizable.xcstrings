@@ -9690,6 +9690,216 @@
           }
         }
       }
+    },
+    "A subdivision every %@ pixels.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每 %@ 像素设置一个细分。"
+          }
+        }
+      }
+    },
+    "Use gridlines every %@–%@ pixels and %@–%@ subdivisions, no more than the pixels between gridlines.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网格线间距请设置为 %@–%@ 像素，细分数量设置为 %@–%@，且不能超过网格线之间的像素数。"
+          }
+        }
+      }
+    },
+    "Current: %@ × %@ pixels": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前：%@ × %@ 像素"
+          }
+        }
+      }
+    },
+    "Result: %@ × %@ pixels": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结果：%@ × %@ 像素"
+          }
+        }
+      }
+    },
+    "Use 1–%@ pixels per side, up to %@ megapixels, and 1–9,600 pixels/inch.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每边请输入 1–%@ 像素，最多 %@ 百万像素，分辨率为 1–9,600 像素/英寸。"
+          }
+        }
+      }
+    },
+    "Zoom in (⌘+), now %@. At 100%% each pixel of the JPEG is one pixel of the screen, as on the canvas": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放大（⌘+），当前 %@。在 100%% 时，JPEG 的每个像素对应屏幕上的一个像素，与画布一致。"
+          }
+        }
+      }
+    },
+    "Zoom out (⌘−), now %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩小（⌘−），当前 %@"
+          }
+        }
+      }
+    },
+    "Opacity digit %@ (type two for exact %%)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不透明度数字 %@（输入两位可精确设置百分比）"
+          }
+        }
+      }
+    },
+    "Nudge %@ 1 px": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向%@微移 1 像素"
+          }
+        }
+      }
+    },
+    "Nudge %@ 10 px": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向%@微移 10 像素"
+          }
+        }
+      }
+    },
+    "Move selected pixels %@ 1 px": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将选中像素向%@移动 1 像素"
+          }
+        }
+      }
+    },
+    "Move selected pixels %@ 10 px": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将选中像素向%@移动 10 像素"
+          }
+        }
+      }
+    },
+    "%@ is reserved by macOS.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已被 macOS 保留。"
+          }
+        }
+      }
+    },
+    "%@ is assigned to both %@ and %@.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 同时分配给了 %@ 和 %@。"
+          }
+        }
+      }
+    },
+    "Text fields keep standard macOS editing keys. Dialogs share the Apply/Cancel assignments above. Numeric fields use Up/Down, with Shift for larger steps. Standard macOS commands include ⌘Q to quit and ⌃⌘F for full screen. The shortcut editor itself always uses Return to save and Esc to cancel when not recording.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本框保留标准 macOS 编辑快捷键。对话框共享上方的“应用/取消”快捷键。数值输入框使用上/下方向键，按住 Shift 可进行更大步进。标准 macOS 命令包括 ⌘Q 退出和 ⌃⌘F 全屏。快捷键编辑器在未录制按键时始终使用 Return 保存、Esc 取消。"
+          }
+        }
+      }
+    },
+    "the selection by this many pixels": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选区指定像素数"
+          }
+        }
+      }
+    },
+    "Enter a whole number from 1 to %@ px.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入 1 到 %@ px 之间的整数。"
+          }
+        }
+      }
+    },
+    "Up": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上"
+          }
+        }
+      }
+    },
+    "Down": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下"
+          }
+        }
+      }
+    },
+    "Left": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左"
+          }
+        }
+      }
+    },
+    "Right": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
