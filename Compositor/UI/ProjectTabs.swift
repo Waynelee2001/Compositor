@@ -331,6 +331,8 @@ private struct ProjectTabButton: View {
     let onReorder: (TabDragPhase) -> Void
     @State private var targeted = false
     private var active: Bool { workspace.selectedID == tab.id }
+    private var closeLabel: String { "Close".localizedUI + " " + tab.title }
+    private var dropHelp: String { targeted ? "Add to".localizedUI + " " + tab.title : tab.title }
     var body: some View {
         HStack(spacing: 0) {
             Button { workspace.select(tab.id) } label: {
@@ -358,13 +360,13 @@ private struct ProjectTabButton: View {
                     .frame(width: 16, height: 28)
                     .padding(.trailing, 5)
                     .contentShape(Rectangle())
-            }.buttonStyle(.plain).help("Close".localizedUI + " " + tab.title).disabled(!workspace.canSwitch)
-                .accessibilityLabel("Close".localizedUI + " " + tab.title)
+            }.buttonStyle(.plain).help(closeLabel).disabled(!workspace.canSwitch)
+                .accessibilityLabel(closeLabel)
         }
         .frame(height: 28)
         .background(targeted ? Color.accentColor.opacity(0.3) : Color.white.opacity(active ? 0.12 : 0.035), in: Capsule())
         .overlay(Capsule().strokeBorder(targeted ? Color.accentColor : Color.white.opacity(active ? 0.22 : 0.08), lineWidth: targeted ? 2 : 1))
-        .help(targeted ? "Add to".localizedUI + " " + tab.title : tab.title)
+        .help(dropHelp)
         .onDrop(of: [UTType.fileURL.identifier, UTType.image.identifier, ProjectWorkspace.layerType], delegate:
             ProjectTabDropDelegate(workspace: workspace, destination: tab.id, targeted: $targeted))
     }
