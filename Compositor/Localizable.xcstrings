@@ -8420,6 +8420,106 @@
           }
         }
       }
+    },
+    "Shift-U (or Tab) steps through Rectangle, Ellipse and Line": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按 Shift-U（或 Tab）在矩形、椭圆和直线之间切换"
+          }
+        }
+      }
+    },
+    "Round the rectangle's corners by this many pixels; 0 keeps them square": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置矩形圆角半径；0 表示保持直角"
+          }
+        }
+      }
+    },
+    "Shapes fill with the foreground color; click to change it": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "形状使用前景色填充；点击可更改颜色"
+          }
+        }
+      }
+    },
+    "Select layers by clicking the canvas. Hold Command to turn it the other way while you click.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击画布选择图层；按住 Command 点击可临时反转此行为。"
+          }
+        }
+      }
+    },
+    "Show the transform box and handles (⌘H). When hidden, drag anywhere to move the layer.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示变换框和手柄（⌘H）。隐藏后，可在任意位置拖动来移动图层。"
+          }
+        }
+      }
+    },
+    "Lock aspect ratio. Hold Shift while dragging a handle to turn it the other way.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "锁定宽高比。拖动手柄时按住 Shift 可临时反转锁定状态。"
+          }
+        }
+      }
+    },
+    "Scale width and height together, about the center": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以中心为基准，同时缩放宽度和高度"
+          }
+        }
+      }
+    },
+    "Font face, including bold and italic variants": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体字形，包括粗体和斜体等变体"
+          }
+        }
+      }
+    },
+    "Line height, baseline to baseline. Empty or 0 is Auto: 120% of the font size.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行高按基线到基线计算。留空或设为 0 时自动使用字号的 120%。"
+          }
+        }
+      }
+    },
+    "(Multiple)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（多个）"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
