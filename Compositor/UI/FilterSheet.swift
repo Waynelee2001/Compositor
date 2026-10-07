@@ -351,6 +351,9 @@ struct GradientMapControls: View {
 
     private func swatch(_ title: String, _ value: AdjustmentColor, action: @escaping () -> Void) -> some View {
         let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+        let localizedTitle = title.localizedUI
+        let colorLabel = localizedTitle + " " + "Color".localizedUI
+        let helpLabel = "Choose".localizedUI + " " + colorLabel
         return HStack(spacing: 8) {
             Button(action: action) {
                 shape
@@ -361,9 +364,9 @@ struct GradientMapControls: View {
                     .contentShape(shape)
             }
             .buttonStyle(.plain)
-            .help("Choose".localizedUI + " " + title.localizedUI + " " + "Color".localizedUI)
-            .accessibilityLabel(title.localizedUI + " " + "Color".localizedUI)
-            Text(title)
+            .help(helpLabel)
+            .accessibilityLabel(colorLabel)
+            Text(localizedTitle)
         }
     }
 }
