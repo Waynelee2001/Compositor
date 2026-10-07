@@ -9280,6 +9280,46 @@
           }
         }
       }
+    },
+    "Smudge and Liquify work on a layer's pixels, not its mask.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涂抹和液化作用于图层像素，不能直接作用于其蒙版。"
+          }
+        }
+      }
+    },
+    "No foreground subject was detected in this layer. Try an image with a more distinct subject.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前图层未检测到前景主体。请尝试主体更清晰的图像。"
+          }
+        }
+      }
+    },
+    "That text box exceeds the %@-pixel or %@-megapixel limit.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该文本框超过了 %@ 像素边长或 %@ 百万像素的限制。"
+          }
+        }
+      }
+    },
+    "Fill Text": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填充文字"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
