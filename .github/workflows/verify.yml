@@ -15,7 +15,7 @@ jobs:
   unit:
     name: unit
     # Push covers same-repo branches. pull_request runs only for forks, so a PR is not tested twice.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    if: true
     runs-on: macos-26
     timeout-minutes: 60
     steps:
