@@ -8730,6 +8730,106 @@
           }
         }
       }
+    },
+    "Not enough unselected, opaque image pixels to synthesize a fill. Use a smaller selection with some surrounding image.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有足够的未选中且不透明的图像像素用于合成填充。请使用更小的选区，并保留一些周围图像。"
+          }
+        }
+      }
+    },
+    "Several layers are selected. Select just one to paint on it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前选中了多个图层。请只选择一个图层进行绘制。"
+          }
+        }
+      }
+    },
+    "“%@” is a folder, which has no pixels of its own. Paint on a layer inside it, or on the folder’s mask.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”是文件夹，本身没有像素。请在其中的图层上绘制，或在该文件夹的蒙版上绘制。"
+          }
+        }
+      }
+    },
+    "“%@” is hidden, or inside a hidden folder. Show it to paint on it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”已隐藏，或位于隐藏的文件夹中。请先显示它再进行绘制。"
+          }
+        }
+      }
+    },
+    "The layer mask is turned off. Shift-click its thumbnail to turn it on, then paint.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图层蒙版已停用。请按住 Shift 单击其缩略图启用，然后再绘制。"
+          }
+        }
+      }
+    },
+    "“%@” is an adjustment layer, with no pixels to paint. Paint on its mask instead.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”是调整图层，没有可直接绘制的像素。请改为在其蒙版上绘制。"
+          }
+        }
+      }
+    },
+    "Nothing is selected, so there’s nowhere to paint. Choose Select › Deselect (⌘D) to paint anywhere.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前没有可绘制区域。请选择“选择 › 取消选择”（⌘D）后即可在任意位置绘制。"
+          }
+        }
+      }
+    },
+    "Option-click where Clone Stamp should copy from first.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先按住 Option 单击，设置仿制图章的取样源点。"
+          }
+        }
+      }
+    },
+    "Erase": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "擦除"
+          }
+        }
+      }
+    },
+    "Blur": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "模糊"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
