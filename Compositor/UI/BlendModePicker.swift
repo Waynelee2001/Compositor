@@ -27,7 +27,9 @@ struct BlendModePicker: NSViewRepresentable {
         button.isEnabled = session.canEditAppearance
         if !context.coordinator.tracking {
             let raw = (session.activeLayer?.blendMode ?? .normal).rawValue
-            button.selectItem(at: button.itemArray.firstIndex(where: { ($0.representedObject as? String) == raw }) ?? -1)
+            if let index = button.itemArray.firstIndex(where: { ($0.representedObject as? String) == raw }) {
+                button.selectItem(at: index)
+            }
         }
     }
     static func dismantleNSView(_ button: NSPopUpButton, coordinator: Coordinator) {
@@ -67,7 +69,9 @@ struct BlendModePicker: NSViewRepresentable {
             guard session.activeLayerID == layerID,
                   let mode = highlightedMode ?? button.selectedItem.flatMap({ ($0.representedObject as? String).flatMap(LayerBlendMode.init(rawValue:)) }) else { return }
             session.setLayerBlendMode(mode)
-            button.selectItem(at: button.itemArray.firstIndex(where: { ($0.representedObject as? String) == mode.rawValue }) ?? -1)
+            if let index = button.itemArray.firstIndex(where: { ($0.representedObject as? String) == mode.rawValue }) {
+                button.selectItem(at: index)
+            }
             highlightedMode = nil
             session.refreshCanvasPreview?()
         }
