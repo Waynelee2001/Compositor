@@ -4,6 +4,8 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     /// The Layers panel's width, remembered across launches.
     @AppStorage("layersPanelWidth") private var layersPanelWidth = 252.0
+    @AppStorage("aiPanelWidth") private var aiPanelWidth = 300.0
+    @AppStorage("showsAIChat") private var showsAIChat = true
     @Bindable var session: EditorSession
     var applicationDelegate: CompositorApplicationDelegate? = nil
     @Environment(\.openWindow) private var openWindow
@@ -14,6 +16,7 @@ struct ContentView: View {
     @State private var colorRangePanel = FloatingPanelController(name: "colorRangePanel")
     @State private var filterPanel = FloatingPanelController(name: "filterPanel")
     @State private var effectsPanel = FloatingPanelController(name: "effectsPanel")
+    @State private var aiChat = AgentChatSession()
     @State private var isDropTargeted = false
     /// The window's width, so the tab strip can use the toolbar's free space.
     @State private var windowWidth: CGFloat = 1180
@@ -80,6 +83,10 @@ struct ContentView: View {
         VStack(spacing: 0) {
             toolHeaders
             HStack(spacing: 0) {
+                if showsAIChat {
+                    AIChatPanel(session: session, chat: aiChat, width: aiPanelWidth)
+                    PanelResizeEdge(width: $aiPanelWidth, range: 240...420)
+                }
                 toolRail
                 Divider()
                 VStack(spacing: 0) {
@@ -178,6 +185,15 @@ struct ContentView: View {
             // Absorb all remaining navigation-toolbar width before the zoom controls.
             // Without this spacer, the growing tab strip pushes the primary actions left.
             ToolbarSpacer(.flexible, placement: .navigation)
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showsAIChat.toggle()
+                } label: {
+                    Image(systemName: showsAIChat ? "sidebar.left" : "sidebar.left")
+                }
+                .help(showsAIChat ? "Hide AI Assistant" : "Show AI Assistant")
+                .accessibilityLabel(showsAIChat ? "Hide AI Assistant" : "Show AI Assistant")
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Fit") { session.fit() }.help("Fit canvas in window (⌘0)")
                     .accessibilityIdentifier("fitCanvas").disabled(session.document == nil)
