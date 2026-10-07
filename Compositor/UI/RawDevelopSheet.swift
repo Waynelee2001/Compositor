@@ -19,7 +19,7 @@ struct RawDevelopSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Develop “\(url.lastPathComponent)”").font(.title2.bold())
+            Text(String(format: "Develop “%@”".localizedUI, url.lastPathComponent)).font(.title2.bold())
             ZStack {
                 RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.35))
                 if let preview {
