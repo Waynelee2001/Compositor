@@ -8520,6 +8520,76 @@
           }
         }
       }
+    },
+    "Canvas Extension": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画布扩展"
+          }
+        }
+      }
+    },
+    "Some dropped items couldn’t be read. Drag JPEG, PNG, HEIC, TIFF, or Photoshop (PSD) files from Finder.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分拖入的项目无法读取。请从 Finder 拖入 JPEG、PNG、HEIC、TIFF 或 Photoshop（PSD）文件。"
+          }
+        }
+      }
+    },
+    "Choose a JPEG, PNG, HEIC, TIFF, or Photoshop (PSD) file.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请选择 JPEG、PNG、HEIC、TIFF 或 Photoshop（PSD）文件。"
+          }
+        }
+      }
+    },
+    "Another app changed this project. You can revert to the version on disk, losing your unsaved changes, or keep what you have.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另一个应用修改了此项目。你可以恢复到磁盘上的版本（未保存的更改将丢失），也可以保留当前内容。"
+          }
+        }
+      }
+    },
+    "Your changes will be lost if you don’t save them.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果不保存，更改将会丢失。"
+          }
+        }
+      }
+    },
+    "An image inside the project is missing or damaged. The current document has not been replaced.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "项目中的某个图像缺失或已损坏。当前文档没有被替换。"
+          }
+        }
+      }
+    },
+    "An image could not be saved. The previous project has not been replaced.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "某个图像无法保存。之前的项目没有被替换。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
