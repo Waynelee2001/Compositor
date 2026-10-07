@@ -48,7 +48,7 @@ struct LayersPanel: View {
                     .accessibilityIdentifier("layerEffects").disabled(!session.canEditEffects)
                 Menu {
                     ForEach(AdjustmentKind.allCases, id: \.self) { kind in
-                        Button(kind.rawValue) { session.addAdjustment(kind) }
+                        Button(kind.displayName) { session.addAdjustment(kind) }
                     }
                 } label: { Image(systemName: "circle.lefthalf.filled").footerHitArea() }
                     .menuStyle(.borderlessButton).fixedSize().help("New adjustment layer").disabled(!session.canEditLayers)
