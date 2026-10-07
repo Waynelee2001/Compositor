@@ -8830,6 +8830,236 @@
           }
         }
       }
+    },
+    "Type (T)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字（T）"
+          }
+        }
+      }
+    },
+    "Eyedropper (I)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "吸管（I）"
+          }
+        }
+      }
+    },
+    "Marquee (M)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选框（M）"
+          }
+        }
+      }
+    },
+    "Lasso (L)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "套索（L）"
+          }
+        }
+      }
+    },
+    "Magic (W) · Tab switches Wand and Object": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "魔棒（W）· Tab 切换魔棒/对象选择"
+          }
+        }
+      }
+    },
+    "Brush (B) · Eraser (E)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画笔（B）· 橡皮擦（E）"
+          }
+        }
+      }
+    },
+    "Spot Healing Brush (J)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "污点修复画笔（J）"
+          }
+        }
+      }
+    },
+    "Clone Stamp (S) · Option-click sets the source": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仿制图章（S）· Option 单击设置源点"
+          }
+        }
+      }
+    },
+    "Smear (R)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涂抹（R）"
+          }
+        }
+      }
+    },
+    "Gradient (G)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "渐变（G）"
+          }
+        }
+      }
+    },
+    "Shape (U) · Shift-U switches Rectangle/Ellipse": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "形状（U）· Shift-U 切换矩形/椭圆"
+          }
+        }
+      }
+    },
+    "Crop (C)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裁剪（C）"
+          }
+        }
+      }
+    },
+    "Move / Transform (V)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动 / 变换（V）"
+          }
+        }
+      }
+    },
+    "Hand (H)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "抓手（H）"
+          }
+        }
+      }
+    },
+    "Zoom (Z)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩放（Z）"
+          }
+        }
+      }
+    },
+    "Rename Layer": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名图层"
+          }
+        }
+      }
+    },
+    "Reorder Layers": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新排列图层"
+          }
+        }
+      }
+    },
+    "Gradient Mask": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "渐变蒙版"
+          }
+        }
+      }
+    },
+    "Click the image to center this range on that color": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击图像，将范围中心设置为该颜色"
+          }
+        }
+      }
+    },
+    "Click the image to widen this range to include that color": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击图像，扩大范围以包含该颜色"
+          }
+        }
+      }
+    },
+    "Click the image to narrow this range to exclude that color": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击图像，缩小范围以排除该颜色"
+          }
+        }
+      }
+    },
+    "No content remained after trimming.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裁切后没有剩余内容。"
+          }
+        }
+      }
+    },
+    "The trimmed image dimensions are invalid.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裁切后的图像尺寸无效。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
