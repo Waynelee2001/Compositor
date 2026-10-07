@@ -1,15 +1,7 @@
 {
-  "originHash" : "e721da7f9826abdffcb6185e886155efa2514bd6234475f1afa893e29eb258d6",
-  "pins" : [
-    {
-      "identity" : "sparkle",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sparkle-project/Sparkle",
-      "state" : {
-        "revision" : "eef1a539a373c1f1a320624b1130fc5de7b2e100",
-        "version" : "2.10.0"
-      }
-    }
-  ],
-  "version" : 3
+ "pins": [
+  {"identity":"shadkit","kind":"remoteSourceControl","location":"https://github.com/jasonkneen/ShadKit","state":{"revision":"6dbefdeb72a276708b7ca748c71ac166c0f4f17d"}},
+  {"identity":"sparkle","kind":"remoteSourceControl","location":"https://github.com/sparkle-project/Sparkle","state":{"revision":"eef1a539a373c1f1a320624b1130fc5de7b2e100","version":"2.10.0"}}
+ ],
+ "version":2
 }

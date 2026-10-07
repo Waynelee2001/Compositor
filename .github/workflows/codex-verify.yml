@@ -1,0 +1,87 @@
+name: Codex Integration
+
+on:
+  push:
+    branches: [feat/codex-app-server-ui]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codex:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Select Xcode 26.6
+        run: sudo xcode-select -s /Applications/Xcode_26.6.app
+      - name: Download and verify pinned Codex
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/prepare_codex_binary.py --out .codex-ci
+      - name: Real Codex protocol smoke test (no account or inference)
+        run: python3 scripts/codex_protocol_smoke.py --codex .codex-ci/codex
+      - name: Resolve pinned Swift packages
+        run: >
+          xcodebuild -resolvePackageDependencies -project Compositor.xcodeproj
+          -scheme Compositor-Codex -onlyUsePackageVersionsFromResolvedFile
+      - name: Build Codex configuration for testing
+        id: build
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing -project Compositor.xcodeproj -scheme Compositor-Codex \
+            -configuration Codex -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath DerivedDataCodex CODE_SIGN_IDENTITY=- 2>&1 | tee codex-build.log
+      - name: Unit and mock app-server tests
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project Compositor.xcodeproj -scheme Compositor-Codex \
+            -configuration Codex -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath DerivedDataCodex -resultBundlePath CodexParallel.xcresult \
+            -parallel-testing-enabled YES -skip-testing:CompositorTests/FloatingPanelTests \
+            -skip-testing:CompositorTests/SliderSnapTests 2>&1 | tee codex-tests.log
+      - name: Window tests serially
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: >
+          xcodebuild test-without-building -project Compositor.xcodeproj -scheme Compositor-Codex
+          -configuration Codex -destination 'platform=macOS,arch=arm64'
+          -derivedDataPath DerivedDataCodex -resultBundlePath CodexSerial.xcresult
+          -parallel-testing-enabled NO -only-testing:CompositorTests/FloatingPanelTests
+          -only-testing:CompositorTests/SliderSnapTests
+      - name: Package ad-hoc development app (not notarized)
+        run: |
+          set -euo pipefail
+          APP=DerivedDataCodex/Build/Products/Codex/Compositor.app
+          test -d "$APP"
+          mkdir -p "$APP/Contents/Helpers" "$APP/Contents/Resources/ThirdParty"
+          cp .codex-ci/codex "$APP/Contents/Helpers/codex"
+          cp .codex-ci/Codex-LICENSE "$APP/Contents/Resources/ThirdParty/"
+          cp .codex-ci/release.json "$APP/Contents/Resources/ThirdParty/Codex-release.json"
+          cp ThirdParty/ShadKit-LICENSE.txt "$APP/Contents/Resources/ThirdParty/"
+          codesign --force --sign - --options runtime --timestamp=none "$APP/Contents/Helpers/codex"
+          codesign --force --sign - --options runtime --timestamp=none "$APP"
+          codesign --verify --deep --strict "$APP"
+          python3 scripts/codex_protocol_smoke.py --codex "$APP/Contents/Helpers/codex"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" Compositor-Codex-arm64.zip
+      - name: Upload development app
+        uses: actions/upload-artifact@v7
+        with:
+          name: Compositor-Codex-arm64-development
+          path: Compositor-Codex-arm64.zip
+          retention-days: 7
+      - name: Upload diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: codex-ci-diagnostics
+          path: |
+            codex-*.log
+            Codex*.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
