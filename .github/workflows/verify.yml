@@ -1,6 +1,8 @@
 name: Verify
 
 on:
+  workflow_dispatch:
+  # Manual verification trigger for fork branches.
   push:
   pull_request:
 

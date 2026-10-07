@@ -27,7 +27,7 @@ nonisolated enum PSDDocumentBuilder {
         for record in document.layers {
             if record.croppedToCanvas {
                 conversions.append(PSDConversion(layerName: record.name,
-                                                 message: "Cropped to the canvas so the file fits in memory. Pixels outside the canvas weren't imported."))
+                                                 message: "Cropped to the canvas so the file fits in memory. Pixels outside the canvas weren't imported.".localizedUI))
             }
             let renderedText = record.text.flatMap { try? PSDText.render($0) }
             var notes: [String] = []
@@ -40,33 +40,34 @@ nonisolated enum PSDDocumentBuilder {
                 }
             }
             if record.kind == .smartObject {
-                notes.append("The smart object was rasterized. Linked contents can’t be edited.")
+                notes.append("The smart object was rasterized. Linked contents can’t be edited.".localizedUI)
             }
             if record.kind == .effects {
-                notes.append("Layer effects were discarded, so the appearance may differ.")
+                notes.append("Layer effects were discarded, so the appearance may differ.".localizedUI)
             }
             if record.kind == .vector {
                 if record.shape != nil {
                     notes.append(contentsOf: record.shapeNotes)
                 } else {
-                    notes.append("Vector shape was rasterized to pixels.")
+                    notes.append("Vector shape was rasterized to pixels.".localizedUI)
                 }
             }
             if record.kind == .other {
-                notes.append("This Photoshop layer type isn’t supported and was imported as pixels.")
+                notes.append("This Photoshop layer type isn’t supported and was imported as pixels.".localizedUI)
             }
             if record.isGroup {
                 if record.blendKey != "pass" && record.blendKey != "norm" {
-                    notes.append("Folder blend mode “\(record.blendKey)” isn’t supported. The folder will be pass-through.")
+                    notes.append(String(format: "Folder blend mode “%@” isn’t supported. The folder will be pass-through.".localizedUI, record.blendKey))
                 }
             } else if record.blendMode == nil, record.blendKey != "pass" {
-                notes.append("Blend mode “\(record.blendKey.trimmingCharacters(in: .whitespaces))” isn’t supported and will be applied as Normal.")
+                notes.append(String(format: "Blend mode “%@” isn’t supported and will be applied as Normal.".localizedUI,
+                    record.blendKey.trimmingCharacters(in: .whitespaces)))
             }
             if record.kind == .adjustment {
                 if record.adjustment == nil {
-                    notes.append("This adjustment type isn’t supported and was skipped.")
+                    notes.append("This adjustment type isn’t supported and was skipped.".localizedUI)
                 } else {
-                    notes.append("Adjustment parameters may not match Photoshop exactly.")
+                    notes.append("Adjustment parameters may not match Photoshop exactly.".localizedUI)
                 }
             }
             for note in notes {
@@ -113,7 +114,7 @@ nonisolated enum PSDDocumentBuilder {
                let maskAsset = try? LayerMask.asset(from: maskImage) {
                 layer.mask = LayerMask(asset: maskAsset, isEnabled: record.maskEnabled, isLinked: record.maskLinked)
             } else if record.mask != nil {
-                conversions.append(PSDConversion(layerName: record.name, message: "The layer mask couldn’t be converted to 8-bit grayscale and was skipped."))
+                conversions.append(PSDConversion(layerName: record.name, message: "The layer mask couldn’t be converted to 8-bit grayscale and was skipped.".localizedUI))
             }
             layers.append(layer)
         }
@@ -127,7 +128,7 @@ nonisolated enum PSDDocumentBuilder {
                    !sourceLayer.isGroup, sourceLayer.adjustment == nil {
                     layers[index].maskSourceID = source
                 } else {
-                    conversions.append(PSDConversion(layerName: record.name, message: "This clipping mask’s base isn’t supported, so clipping was skipped."))
+                    conversions.append(PSDConversion(layerName: record.name, message: "This clipping mask’s base isn’t supported, so clipping was skipped.".localizedUI))
                 }
             } else if let layer = idToIndex[record.id].map({ layers[$0] }), !layer.isGroup, layer.adjustment == nil {
                 baseForParent[record.parentID] = record.id

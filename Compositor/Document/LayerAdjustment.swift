@@ -7,6 +7,7 @@ nonisolated enum AdjustmentKind: String, Codable, CaseIterable, Sendable {
     case gaussianBlur = "Gaussian Blur", motionBlur = "Motion Blur"
     case invert = "Invert"
     case blackWhite = "Black & White", colorBalance = "Color Balance"
+    var displayName: String { NSLocalizedString(rawValue, comment: "") }
     var symbol: String {
         switch self {
         case .curves: return "point.topleft.down.to.point.bottomright.curvepath"

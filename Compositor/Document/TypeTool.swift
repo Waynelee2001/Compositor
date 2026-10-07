@@ -333,7 +333,8 @@ extension EditorSession {
         guard canEditLayers, textDraft == nil, rect.width.isFinite, rect.height.isFinite else { return }
         var style = textDefaults
         style.boxSize = CGSize(width: max(16, rect.width.rounded()), height: max(16, rect.height.rounded()))
-        guard style.boxIsValid else { brushError = "That text box exceeds the \(DocumentLimits.maxSide.formatted())-pixel or \(DocumentLimits.maxSurfaceMegapixels)-megapixel limit."; return }
+        guard style.boxIsValid else { brushError = String(format: "That text box exceeds the %@-pixel or %@-megapixel limit.".localizedUI,
+            DocumentLimits.maxSide.formatted(), String(DocumentLimits.maxSurfaceMegapixels)); return }
         beginText(at: rect.origin, newLayer: true)
         // A dragged box is exactly where it was drawn.
         textDraft?.origin = rect.origin
@@ -351,7 +352,7 @@ extension EditorSession {
         style.setColor(color, in: NSRange(location: 0, length: 0))
         guard style.isValid, let image = try? Self.textImage(style), let thumbnail = try? PixelInvert.thumbnail(of: image) else { return false }
         finishOpacityEdit()
-        beginEdit("Fill Text")
+        beginEdit("Fill Text".localizedUI)
         document?.layers[index].asset = ImportedImage(image: image, thumbnail: thumbnail, name: asset.name)
         document?.layers[index].text = LayerText(style: style, image: image)
         endEdit()

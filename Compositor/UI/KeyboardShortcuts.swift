@@ -111,10 +111,14 @@ struct ShortcutDefinition: Identifiable {
         result += [entry("Decrease brush hardness", "[", 8), entry("Increase brush hardness", "]", 8),
                    entry("Previous blend mode", "-", 8), entry("Next blend mode", "=", 8),
                    entry("Cycle shape kind", "u", 8)]
-        for digit in 0...9 { result.append(entry("Opacity digit \(digit) (type two for exact %)", String(digit))) }
+        for digit in 0...9 {
+            result.append(entry(String(format: "Opacity digit %@ (type two for exact %%)".localizedUI, String(digit)), String(digit)))
+        }
         for (direction, key) in [("Left", "\u{f702}"), ("Right", "\u{f703}"), ("Up", "\u{f700}"), ("Down", "\u{f701}")] {
-            result += [entry("Nudge \(direction) 1 px", key), entry("Nudge \(direction) 10 px", key, 8),
-                       entry("Move selected pixels \(direction) 1 px", key, 1), entry("Move selected pixels \(direction) 10 px", key, 9)]
+            result += [entry(String(format: "Nudge %@ 1 px".localizedUI, direction.localizedUI), key),
+                       entry(String(format: "Nudge %@ 10 px".localizedUI, direction.localizedUI), key, 8),
+                       entry(String(format: "Move selected pixels %@ 1 px".localizedUI, direction.localizedUI), key, 1),
+                       entry(String(format: "Move selected pixels %@ 10 px".localizedUI, direction.localizedUI), key, 9)]
         }
         result.append(.init(title: "Finish editing text", group: "Text Editing", original: ShortcutChord("\r", 1)))
         for (title, key) in [("Decrease tracking", "\u{f702}"), ("Increase tracking", "\u{f703}"),
@@ -172,9 +176,12 @@ final class ShortcutSettings {
                 return "Text-editing shortcuts need Command, Option, or Control so they do not replace normal typing."
             }
             if [ShortcutChord("q", 1), ShortcutChord(",", 1), ShortcutChord("m", 3)].contains(chord) {
-                return "\(chord.label) is reserved by macOS."
+                return String(format: "%@ is reserved by macOS.".localizedUI, chord.label)
             }
-            if let other = assigned[chord] { return "\(chord.label) is assigned to both \(other) and \(definition.title)." }
+            if let other = assigned[chord] {
+                return String(format: "%@ is assigned to both %@ and %@.".localizedUI,
+                              chord.label, other.localizedUI, definition.title.localizedUI)
+            }
             assigned[chord] = definition.title
         }
         return nil
@@ -258,7 +265,7 @@ private struct KeyboardShortcutsSheet: View {
                     }
                     Divider().padding(.vertical, 8)
                     Text("Contextual keys & mouse gestures").font(.headline)
-                    Text("Text fields keep standard macOS editing keys. Dialogs share the Apply/Cancel assignments above. Numeric fields use Up/Down, with Shift for larger steps. Standard macOS commands include ⌘Q to quit and ⌃⌘F for full screen. The shortcut editor itself always uses Return to save and Esc to cancel when not recording.")
+                    Text("Text fields keep standard macOS editing keys. Dialogs share the Apply/Cancel assignments above. Numeric fields use Up/Down, with Shift for larger steps. Standard macOS commands include ⌘Q to quit and ⌃⌘F for full screen. The shortcut editor itself always uses Return to save and Esc to cancel when not recording.".localizedUI)
                     Text("Option temporarily selects the eyedropper in painting tools. Shift constrains shapes/movement or adds to a selection; Option subtracts from selections or draws from center. Command-drag moves selected pixels; Command-Option-drag copies them. Option-drag duplicates layers/folders/effects; Option-click at a layer boundary toggles clipping. Command-click a thumbnail loads its selection. Control bypasses snapping. Right-drag adjusts brush size. Modifier-and-mouse gestures are fixed.")
                 }.padding(.trailing, 8)
             }.frame(height: 465)

@@ -22,6 +22,7 @@ nonisolated enum FilterKind: String, CaseIterable, Sendable {
     case grain = "Grain"
     case blackWhite = "Black & White"
     case colorBalance = "Color Balance"
+    var displayName: String { NSLocalizedString(rawValue, comment: "") }
     var isAutomatic: Bool { self == .contentAwareFill || self == .removeBackground }
     /// Color adjustments: in the Image menu (and editable as adjustment layers), not under Filter.
     var isImageAdjustment: Bool {

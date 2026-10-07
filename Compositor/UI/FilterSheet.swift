@@ -307,7 +307,7 @@ struct FilterSheet: View {
                             range: range)
             if let track {
                 CameraRawSlider(value: settings[keyPath: key], range: range, track: track,
-                                help: "\(title). Double-click to reset.",
+                                help: title.localizedUI + ". " + "Double-click to reset.".localizedUI,
                                 onChange: { value in update { $0[keyPath: key] = (value * step).rounded() / step } },
                                 onReset: reset)
             } else {
@@ -351,6 +351,9 @@ struct GradientMapControls: View {
 
     private func swatch(_ title: String, _ value: AdjustmentColor, action: @escaping () -> Void) -> some View {
         let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+        let localizedTitle = title.localizedUI
+        let colorLabel = localizedTitle + " " + "Color".localizedUI
+        let helpLabel = "Choose".localizedUI + " " + colorLabel
         return HStack(spacing: 8) {
             Button(action: action) {
                 shape
@@ -361,9 +364,9 @@ struct GradientMapControls: View {
                     .contentShape(shape)
             }
             .buttonStyle(.plain)
-            .help("Choose the \(title.lowercased()) color")
-            .accessibilityLabel("\(title) color")
-            Text(title)
+            .help(helpLabel)
+            .accessibilityLabel(colorLabel)
+            Text(localizedTitle)
         }
     }
 }

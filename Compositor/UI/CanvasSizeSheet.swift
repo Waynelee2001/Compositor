@@ -67,12 +67,12 @@ struct CanvasSizeSheet: View {
     @ViewBuilder private var sheet: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Canvas Size").font(.title2.bold())
-            Text("Current: \(draft.originalWidth) × \(draft.originalHeight) pixels")
-            Text("\(bytes(draft.originalWidth, draft.originalHeight)) uncompressed RGBA canvas")
+            Text(String(format: "Current: %@ × %@ pixels".localizedUI, String(draft.originalWidth), String(draft.originalHeight)))
+            Text(String(format: "%@ uncompressed RGBA canvas".localizedUI, bytes(draft.originalWidth, draft.originalHeight)))
                 .font(.callout).foregroundStyle(.secondary)
             Divider()
             Picker("Units", selection: $draft.unit) {
-                ForEach(CanvasUnit.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(CanvasUnit.allCases, id: \.self) { Text($0.rawValue.localizedUI).tag($0) }
             }
             HStack {
                 Text("Width").frame(width: 60, alignment: .leading)
@@ -90,10 +90,12 @@ struct CanvasSizeSheet: View {
                     if locked { draft.set(draft.displayed(widthAxis: true), widthAxis: true) }
                 }
             if draft.valid {
-                Text("New: \(Int(draft.width.rounded())) × \(Int(draft.height.rounded())) pixels · \(bytes(Int(draft.width.rounded()), Int(draft.height.rounded()))) uncompressed")
+                Text(String(format: "New: %@ × %@ pixels · %@ uncompressed".localizedUI,
+                            String(Int(draft.width.rounded())), String(Int(draft.height.rounded())),
+                            bytes(Int(draft.width.rounded()), Int(draft.height.rounded()))))
                     .font(.callout).foregroundStyle(.secondary)
             } else {
-                Text("Final dimensions must be 1–\(DocumentLimits.maxSide.formatted()) pixels per side.")
+                Text(String(format: "Final dimensions must be 1–%@ pixels per side.".localizedUI, DocumentLimits.maxSide.formatted()))
                     .font(.callout).foregroundStyle(.orange)
             }
             HStack(alignment: .top, spacing: 24) {
