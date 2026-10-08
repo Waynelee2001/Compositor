@@ -2656,8 +2656,10 @@ extension CanvasView {
         var frame = gray(EditorPalette.canvasWhite(effectiveAppearance)).cropped(to: full)
         guard rect.intersects(full) else { return frame }
         // The document's shadow, then its checkerboard: 10-point squares from its top-left corner.
+        // Quartz shadows use device-space distances, independent of the drawing CTM.
+        // Its positive-y shadow offset is upward in this flipped view; do not multiply by backing scale.
         let shadow = CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.35)).cropped(to: rect)
-            .transformed(by: CGAffineTransform(translationX: 0, y: 3 * device)).applyingGaussianBlur(sigma: 7 * device)
+            .transformed(by: CGAffineTransform(translationX: 0, y: -3)).applyingGaussianBlur(sigma: 7)
         frame = shadow.composited(over: frame)
         let tile = 10 * device
         let plain = gray(EditorPalette.checkerWhite(effectiveAppearance, alternate: false))
