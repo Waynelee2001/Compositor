@@ -16,4 +16,9 @@
   <dict><key>UTTypeConformsTo</key><array><string>public.image</string></array><key>UTTypeDescription</key><string>Adobe Photoshop Document</string><key>UTTypeIdentifier</key><string>com.adobe.photoshop-image</string><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>psd</string></array></dict></dict>
   <dict><key>UTTypeConformsTo</key><array><string>public.image</string></array><key>UTTypeDescription</key><string>Adobe Photoshop Large Document</string><key>UTTypeIdentifier</key><string>com.adobe.photoshop-large-image</string><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>psb</string></array></dict></dict>
  </array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict></plist>

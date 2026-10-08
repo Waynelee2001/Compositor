@@ -1,0 +1,26 @@
+name: Source Snapshot
+on:
+  push:
+    branches: [feat/providers-and-themes]
+    paths: [.github/workflows/source-snapshot.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Archive tracked source and exact revision
+        run: |
+          git archive --format=tar.gz --output=/tmp/compositor-source.tar.gz HEAD
+          git rev-parse HEAD > /tmp/source-commit.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: compositor-source
+          path: |
+            /tmp/compositor-source.tar.gz
+            /tmp/source-commit.txt
+          retention-days: 3

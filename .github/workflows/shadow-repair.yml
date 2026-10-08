@@ -1,0 +1,36 @@
+name: Apply Canvas Shadow Repair
+on:
+  push:
+    branches: [feat/providers-and-themes]
+    paths: [.github/workflows/shadow-repair.yml]
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: github.ref == 'refs/heads/feat/providers-and-themes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Match Quartz shadow coordinates in the GPU canvas
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('Compositor/Rendering/EditorCanvas.swift')
+          text = p.read_text()
+          old = '.transformed(by: CGAffineTransform(translationX: 0, y: 3 * device)).applyingGaussianBlur(sigma: 7 * device)'
+          new = '.transformed(by: CGAffineTransform(translationX: 0, y: -3)).applyingGaussianBlur(sigma: 7)'
+          assert text.count(old) == 1
+          text = text.replace(old, new)
+          note = "        let shadow = CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.35)).cropped(to: rect)"
+          assert text.count(note) == 1
+          text = text.replace(note, "        // Quartz shadows use device-space distances, independent of the drawing CTM.\n        // Its positive-y shadow offset is upward in this flipped view; do not multiply by backing scale.\n" + note)
+          p.write_text(text)
+          PY
+          git diff --check
+          git add Compositor/Rendering/EditorCanvas.swift
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Match GPU canvas shadow direction and device-space blur to Core Graphics'
+          git push origin HEAD:refs/heads/feat/providers-and-themes
+          git rev-parse HEAD

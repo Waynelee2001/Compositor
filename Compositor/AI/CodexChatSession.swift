@@ -33,9 +33,10 @@ final class AgentChatSession {
     var accountLabel = ""
     var serverVersion = ""
     var models: [CodexModelOption] = []
-    var modelID = UserDefaults.standard.string(forKey: "codexModel") ?? "" {
-        didSet { UserDefaults.standard.set(modelID, forKey: "codexModel") }
-    }
+    private(set) var provider = AIProviderProfile.codex
+    private(set) var modelID = UserDefaults.standard.string(forKey: "codexModel") ?? ""
+    var canSwitchProvider: Bool { !isRunning && !isConnecting && !isExecutingTool }
+    var conversationScope: String { provider.conversationScope(model: modelID) }
     var sharesCanvas = false
     var asksBeforeEdits = true
     var approval: CodexEditApproval?
@@ -60,6 +61,8 @@ final class AgentChatSession {
     @ObservationIgnored private var stopTimer: Task<Void, Never>?
 
     init() {
+        provider = AIProviderStore.shared.profile(AIProviderStore.shared.preferredID)
+        if provider.kind != .codex { modelID = UserDefaults.standard.string(forKey: "codexModel." + provider.id) ?? provider.model }
         rpc.onNotification = { [weak self] method, params in self?.notification(method, params) }
         rpc.onRequest = { [weak self] id, method, params in self?.serverRequest(id, method, params) }
         rpc.onDisconnect = { [weak self] error in
@@ -75,9 +78,37 @@ final class AgentChatSession {
         disconnect()
         documentID = session.document?.id
         threadID = nil; resumed = false; transcript = CodexTranscript()
-        if let id = documentID, let saved = CodexLocalStore.load(id) {
-            threadID = saved.threadID; modelID = saved.model; transcript = saved.transcript
+        if let id = documentID, let saved = CodexLocalStore.load(id, scope: conversationScope) {
+            threadID = saved.threadID; transcript = saved.transcript
             transcript.settle(.interrupted)
+        }
+    }
+    func chooseProvider(_ id: String, force: Bool = false) {
+        guard canSwitchProvider else { return }
+        let next = AIProviderStore.shared.profile(id)
+        guard force || provider != next else { return }
+        persist(); disconnect()
+        provider = next; AIProviderStore.shared.prefer(id)
+        modelID = next.kind == .codex ? (UserDefaults.standard.string(forKey: "codexModel") ?? "")
+            : (UserDefaults.standard.string(forKey: "codexModel." + id) ?? next.model)
+        // A settings save may remove the previously selected model.
+        if next.kind != .codex && !next.models.contains(modelID) { modelID = next.model }
+        sharesCanvas = false
+        loadProviderConversation()
+    }
+    func chooseModel(_ id: String) {
+        guard canSwitchProvider, id != modelID,
+              AIProviderProfile.validModel(id) || (provider.kind == .codex && id.isEmpty) else { return }
+        persist(); disconnect(); modelID = id
+        UserDefaults.standard.set(id, forKey: provider.kind == .codex ? "codexModel" : "codexModel." + provider.id)
+        sharesCanvas = false
+        loadProviderConversation()
+    }
+    private func loadProviderConversation() {
+        threadID = nil; resumed = false; transcript = CodexTranscript(); errorMessage = nil
+        accountLabel = ""; serverVersion = ""; models = []
+        if let documentID, let saved = CodexLocalStore.load(documentID, scope: conversationScope) {
+            threadID = saved.threadID; transcript = saved.transcript; transcript.settle(.interrupted)
         }
     }
     func connect() async throws {
@@ -91,10 +122,13 @@ final class AgentChatSession {
         defer { if epoch == token { isConnecting = false } }
         do {
             let binary = try CodexConfiguration.executable()
-            let home = try CodexLocalStore.directory("CodexHome")
-            let directory = try CodexLocalStore.directory("Workspace")
+            let root = provider.kind == .codex ? "" : "Providers/" + provider.id + "/" + provider.revision + "/"
+            let home = try CodexLocalStore.directory(root + "CodexHome")
+            let directory = try CodexLocalStore.directory(root + "Workspace")
             workspace = directory
-            try rpc.launch(executable: binary, home: home, workspace: directory)
+            var selected = provider; selected.model = modelID
+            let key = selected.kind == .responses ? try AIProviderKeys.read(selected.keychainAccount()) : nil
+            try rpc.launch(executable: binary, home: home, workspace: directory, profile: selected, apiKey: key)
             let handshake = try await rpc.request("initialize", ["clientInfo": [
                 "name": "compositor_photo_editor", "title": "Compositor", "version": "0.2.0"],
                 "capabilities": ["experimentalApi": true]])
@@ -111,27 +145,35 @@ final class AgentChatSession {
         }
     }
     func refreshAccount() async throws {
+        if provider.kind == .responses {
+            // A key being configured is not a claim that a paid inference request succeeded.
+            isAuthenticated = true; accountLabel = provider.name; return
+        }
         let result = try await rpc.request("account/read", ["refreshToken": false])
         isAuthenticated = result["account"] != .null || result["requiresOpenaiAuth"].bool == false
         let account = result["account"]
         accountLabel = account["email"].string ?? account["type"].string ?? ""
     }
     func refreshModels() async throws {
+        if provider.kind == .responses {
+            models = Array(Set(provider.models + [modelID])).filter(AIProviderProfile.validModel).sorted()
+                .map { .init(id: $0, title: $0 == "deepseek-flash" ? "DeepSeek V4.1 Flash" : $0) }
+            return
+        }
         var choices: [CodexModelOption] = [], cursor = CodexJSON.null
         for _ in 0..<10 {
             let page = try await rpc.request("model/list", ["limit": 100, "cursor": cursor])
             for item in page["data"].array {
                 guard let id = item["model"].string ?? item["id"].string else { continue }
                 choices.append(.init(id: id, title: item["displayName"].string ?? id))
-                if modelID.isEmpty, item["isDefault"].bool == true { modelID = id }
             }
             cursor = page["nextCursor"]
             if cursor == .null { break }
         }
         models = choices
-        if modelID.isEmpty { modelID = choices.first?.id ?? "" }
     }
     func signIn() async throws {
+        guard provider.kind == .codex else { return }
         try await connect()
         let result = try await rpc.request("account/login/start", ["type": "chatgpt"])
         guard let address = result["authUrl"].string else { throw CodexRuntimeError(message: "Codex did not return a sign-in address.") }
@@ -140,6 +182,7 @@ final class AgentChatSession {
         guard NSWorkspace.shared.open(url) else { throw CodexRuntimeError(message: "Could not open the sign-in browser.") }
     }
     func signIn(apiKey: String) async throws {
+        guard provider.kind == .codex else { return }
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw CodexRuntimeError(message: "Enter an API key.")
         }
@@ -148,6 +191,7 @@ final class AgentChatSession {
         try await refreshAccount(); try await refreshModels()
     }
     func signOut() async throws {
+        guard provider.kind == .codex else { disconnect(); return }
         guard !isRunning, !isExecutingTool else { return }
         _ = try await rpc.request("account/logout")
         isAuthenticated = false; accountLabel = ""
@@ -171,11 +215,13 @@ final class AgentChatSession {
                 if let threadID {
                     let result = try await rpc.request("thread/resume", ["threadId": .string(threadID),
                         "model": modelID.isEmpty ? .null : .string(modelID),
+                        "modelProvider": provider.kind == .codex ? .null : .string(provider.id),
                         "approvalPolicy": .string(CodexRPCConnection.approvalPolicy), "sandbox": "read-only"])
                     restore(result["thread"]["turns"].array)
                 } else {
                     let result = try await rpc.request("thread/start", [
-                        "model": modelID.isEmpty ? .null : .string(modelID), "cwd": .string(workspace!.path),
+                        "model": modelID.isEmpty ? .null : .string(modelID),
+                        "modelProvider": provider.kind == .codex ? .null : .string(provider.id), "cwd": .string(workspace!.path),
                         "approvalPolicy": .string(CodexRPCConnection.approvalPolicy), "sandbox": "read-only", "ephemeral": false,
                         "baseInstructions": .string(CodexConfiguration.instructions),
                         "dynamicTools": .array(CodexEditorTools.definitions)])
@@ -227,7 +273,7 @@ final class AgentChatSession {
     func newConversation() {
         guard !isRunning, !isExecutingTool else { return }
         threadID = nil; activeTurnID = nil; resumed = false; transcript = CodexTranscript(); errorMessage = nil
-        if let documentID { do { try CodexLocalStore.forget(documentID) } catch { errorMessage = error.localizedDescription } }
+        if let documentID { do { try CodexLocalStore.forget(documentID, scope: conversationScope) } catch { errorMessage = error.localizedDescription } }
     }
     func resolveApproval(_ allow: Bool) {
         approvalTimer?.cancel(); approvalTimer = nil; approval = nil
@@ -309,7 +355,7 @@ final class AgentChatSession {
                 transcript.tool(id: itemID, name: name, arguments: args.pretty, state: .running)
                 isExecutingTool = true
                 defer { isExecutingTool = false }
-                result = try await CodexEditorTools.execute(name, arguments: args, session: editor, documentID: documentID, sharesCanvas: sharesCanvas)
+                result = try await CodexEditorTools.execute(name, arguments: args, session: editor, documentID: documentID, sharesCanvas: sharesCanvas && (provider.kind == .codex || provider.acceptsImages(model: modelID)))
                 guard epoch == token else { return }
                 transcript.tool(id: itemID, name: name, arguments: args.pretty, state: .completed, output: CodexEditorTools.displayOutput(result))
             } catch {
@@ -361,7 +407,7 @@ final class AgentChatSession {
     }
     private func persist() {
         guard let documentID, let threadID else { return }
-        do { try CodexLocalStore.save(.init(documentID: documentID, threadID: threadID, model: modelID, transcript: transcript)) }
+        do { try CodexLocalStore.save(.init(documentID: documentID, threadID: threadID, model: modelID, transcript: transcript), scope: conversationScope) }
         catch { errorMessage = error.localizedDescription }
     }
     private func restore(_ turns: [CodexJSON]) {

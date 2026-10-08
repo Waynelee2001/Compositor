@@ -19,6 +19,9 @@ struct EditorCanvas: NSViewRepresentable {
 }
 
 final class CanvasView: NSView {
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance(); needsDisplay = true
+    }
     var inlineTextEditor: InlineTextEditor?
     /// The text being typed, rendered as the layer will hold it, remade only when its style changes.
     private var draftTextCache: (style: LayerTextStyle, image: CGImage)?
@@ -863,7 +866,7 @@ final class CanvasView: NSView {
         if lines.frame != bounds { lines.frame = bounds }
         lines.needsDisplay = true
         if drawOnGPU(dirtyRect) { return }
-        NSColor(white: 0.105, alpha: 1).setFill()
+        EditorPalette.canvas(effectiveAppearance).setFill()
         dirtyRect.fill()
         guard let document = session.document,
               let context = NSGraphicsContext.current?.cgContext else { return }
@@ -875,12 +878,12 @@ final class CanvasView: NSView {
         context.saveGState()
         context.setShadow(offset: CGSize(width: 0, height: 3), blur: 14,
                           color: NSColor.black.withAlphaComponent(0.35).cgColor)
-        context.setFillColor(NSColor(white: 0.26, alpha: 1).cgColor)
+        context.setFillColor(CGColor(gray: 1, alpha: 1))
         context.fill(rect)
         context.restoreGState()
         context.saveGState()
         context.clip(to: rect.intersection(dirtyRect))
-        context.setFillColor(NSColor(white: 0.30, alpha: 1).cgColor)
+        context.setFillColor(EditorPalette.checker(effectiveAppearance, alternate: false).cgColor)
         context.fill(rect)
         // Work scales with the visible viewport, not document dimensions.
         let tile: CGFloat = 10
@@ -890,7 +893,7 @@ final class CanvasView: NSView {
             let maxX = Int(ceil((visible.maxX - rect.minX) / tile))
             let minY = Int(floor((visible.minY - rect.minY) / tile))
             let maxY = Int(ceil((visible.maxY - rect.minY) / tile))
-            context.setFillColor(NSColor(white: 0.35, alpha: 1).cgColor)
+            context.setFillColor(EditorPalette.checker(effectiveAppearance, alternate: true).cgColor)
             for row in minY..<maxY {
                 for column in minX..<maxX where (row + column).isMultiple(of: 2) {
                     context.fill(CGRect(x: rect.minX + CGFloat(column) * tile,
@@ -909,7 +912,7 @@ final class CanvasView: NSView {
             context.endTransparencyLayer()
         }
         context.restoreGState()
-        context.setStrokeColor(NSColor.white.withAlphaComponent(0.13).cgColor)
+        context.setStrokeColor(EditorPalette.edge(effectiveAppearance).cgColor)
         context.setLineWidth(1 / session.viewport.backingScale)
         context.stroke(rect)
     }
@@ -2650,17 +2653,21 @@ extension CanvasView {
         func gray(_ white: CGFloat, alpha: CGFloat = 1) -> CIImage {
             CIImage(color: CIColor(red: white, green: white, blue: white, alpha: alpha))
         }
-        var frame = gray(0.105).cropped(to: full)
+        var frame = gray(EditorPalette.canvasWhite(effectiveAppearance)).cropped(to: full)
         guard rect.intersects(full) else { return frame }
         // The document's shadow, then its checkerboard: 10-point squares from its top-left corner.
+        // Quartz shadows use device-space distances, independent of the drawing CTM.
+        // Its positive-y shadow offset is upward in this flipped view; do not multiply by backing scale.
         let shadow = CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.35)).cropped(to: rect)
-            .transformed(by: CGAffineTransform(translationX: 0, y: 3 * device)).applyingGaussianBlur(sigma: 7 * device)
+            .transformed(by: CGAffineTransform(translationX: 0, y: -3)).applyingGaussianBlur(sigma: 7)
         frame = shadow.composited(over: frame)
         let tile = 10 * device
-        let squares = gray(0.35).cropped(to: CGRect(x: 0, y: 0, width: tile, height: tile))
-            .composited(over: gray(0.30).cropped(to: CGRect(x: tile, y: 0, width: tile, height: tile)))
-            .composited(over: gray(0.30).cropped(to: CGRect(x: 0, y: tile, width: tile, height: tile)))
-            .composited(over: gray(0.35).cropped(to: CGRect(x: tile, y: tile, width: tile, height: tile)))
+        let plain = gray(EditorPalette.checkerWhite(effectiveAppearance, alternate: false))
+        let alternate = gray(EditorPalette.checkerWhite(effectiveAppearance, alternate: true))
+        let squares = alternate.cropped(to: CGRect(x: 0, y: 0, width: tile, height: tile))
+            .composited(over: plain.cropped(to: CGRect(x: tile, y: 0, width: tile, height: tile)))
+            .composited(over: plain.cropped(to: CGRect(x: 0, y: tile, width: tile, height: tile)))
+            .composited(over: alternate.cropped(to: CGRect(x: tile, y: tile, width: tile, height: tile)))
         let offset = NSAffineTransform()
         offset.translateX(by: rect.minX, yBy: rect.minY)
         let checkerboard = squares.applyingFilter("CIAffineTile", parameters: [kCIInputTransformKey: offset]).cropped(to: rect)
@@ -2672,7 +2679,7 @@ extension CanvasView {
         if crisp { layers = layers.cropped(to: pixels).samplingNearest().transformed(by: mapping) }
         frame = layers.cropped(to: rect).composited(over: frame)
         // The document's edge: a one-pixel line centered on it.
-        let edge = gray(1, alpha: 0.13)
+        let edge = gray(EditorPalette.edgeWhite(effectiveAppearance), alpha: 0.13)
         for line in [CGRect(x: rect.minX - 0.5, y: rect.minY - 0.5, width: rect.width + 1, height: 1),
                      CGRect(x: rect.minX - 0.5, y: rect.maxY - 0.5, width: rect.width + 1, height: 1),
                      CGRect(x: rect.minX - 0.5, y: rect.minY + 0.5, width: 1, height: rect.height - 1),

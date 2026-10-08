@@ -1,0 +1,117 @@
+name: Providers and Themes
+on:
+  push:
+    branches: [feat/providers-and-themes]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: providers-themes-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  codex:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.6.app
+      - name: Download pinned Codex
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/prepare_codex_binary.py --out .codex-ci
+      - name: Signed-out protocol smoke
+        run: python3 scripts/codex_protocol_smoke.py --codex .codex-ci/codex
+      - name: Real Codex custom-provider and vision tool round trip (local fake API only)
+        run: |
+          set -o pipefail
+          swiftc -swift-version 5 Compositor/AI/CodexWire.swift Compositor/AI/AIProviderProfile.swift scripts/provider_fixture.swift -o /tmp/provider-fixture
+          /tmp/provider-fixture > /tmp/provider-fixture.json
+          python3 scripts/provider_protocol_smoke.py --codex .codex-ci/codex --fixture /tmp/provider-fixture.json 2>&1 | tee provider-protocol.log
+      - name: Resolve dependencies
+        run: xcodebuild -resolvePackageDependencies -project Compositor.xcodeproj -scheme Compositor-Codex -onlyUsePackageVersionsFromResolvedFile
+      - name: Build Codex configuration
+        id: build
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing -project Compositor.xcodeproj -scheme Compositor-Codex -configuration Codex -destination 'platform=macOS,arch=arm64' -derivedDataPath DerivedDataCodex CODE_SIGN_IDENTITY=- 2>&1 | tee provider-build.log
+      - name: Parallel unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project Compositor.xcodeproj -scheme Compositor-Codex -configuration Codex -destination 'platform=macOS,arch=arm64' -derivedDataPath DerivedDataCodex -resultBundlePath ProviderParallel.xcresult -parallel-testing-enabled YES -skip-testing:CompositorTests/FloatingPanelTests -skip-testing:CompositorTests/SliderSnapTests -skip-testing:CompositorTests/AppearanceTests 2>&1 | tee provider-tests.log
+      - name: Serial window and theme export tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project Compositor.xcodeproj -scheme Compositor-Codex -configuration Codex -destination 'platform=macOS,arch=arm64' -derivedDataPath DerivedDataCodex -resultBundlePath ProviderSerial.xcresult -parallel-testing-enabled NO -only-testing:CompositorTests/FloatingPanelTests -only-testing:CompositorTests/SliderSnapTests -only-testing:CompositorTests/AppearanceTests 2>&1 | tee provider-windows.log
+      - name: Package development build (ad-hoc signed, not notarized)
+        run: |
+          set -euo pipefail
+          APP=DerivedDataCodex/Build/Products/Codex/Compositor.app
+          mkdir -p "$APP/Contents/Helpers" "$APP/Contents/Resources/ThirdParty"
+          cp .codex-ci/codex "$APP/Contents/Helpers/codex"
+          cp .codex-ci/Codex-LICENSE "$APP/Contents/Resources/ThirdParty/"
+          cp .codex-ci/release.json "$APP/Contents/Resources/ThirdParty/Codex-release.json"
+          cp ThirdParty/ShadKit-LICENSE.txt "$APP/Contents/Resources/ThirdParty/"
+          codesign --force --sign - --options runtime --timestamp=none "$APP/Contents/Helpers/codex"
+          codesign --force --sign - --options runtime --timestamp=none "$APP"
+          codesign --verify --deep --strict "$APP"
+          python3 scripts/codex_protocol_smoke.py --codex "$APP/Contents/Helpers/codex"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" Compositor-Providers-Themes-arm64.zip
+          git rev-parse HEAD > tested-commit.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Compositor-Providers-Themes-arm64-development
+          path: |
+            Compositor-Providers-Themes-arm64.zip
+            tested-commit.txt
+          retention-days: 7
+      - name: Upload theme previews
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: theme-previews
+          path: /tmp/compositor-theme-previews/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: provider-theme-diagnostics
+          path: |
+            provider-*.log
+            Provider*.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
+  standard:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: sudo xcode-select -s /Applications/Xcode_26.6.app
+      - run: xcodebuild -resolvePackageDependencies -project Compositor.xcodeproj -scheme Compositor -onlyUsePackageVersionsFromResolvedFile
+      - name: Standard sandboxed build
+        id: build
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing -project Compositor.xcodeproj -scheme Compositor -configuration Debug -destination 'platform=macOS,arch=arm64' -derivedDataPath DerivedData CODE_SIGN_IDENTITY=- 2>&1 | tee standard-build.log
+      - name: Standard regression tests
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project Compositor.xcodeproj -scheme Compositor -destination 'platform=macOS,arch=arm64' -derivedDataPath DerivedData -resultBundlePath StandardParallel.xcresult -parallel-testing-enabled YES -skip-testing:CompositorTests/FloatingPanelTests -skip-testing:CompositorTests/SliderSnapTests -skip-testing:CompositorTests/AppearanceTests 2>&1 | tee standard-tests.log
+      - name: Standard window tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: xcodebuild test-without-building -project Compositor.xcodeproj -scheme Compositor -destination 'platform=macOS,arch=arm64' -derivedDataPath DerivedData -resultBundlePath StandardSerial.xcresult -parallel-testing-enabled NO -only-testing:CompositorTests/FloatingPanelTests -only-testing:CompositorTests/SliderSnapTests
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: standard-theme-diagnostics
+          path: |
+            standard-*.log
+            Standard*.xcresult
+          retention-days: 7

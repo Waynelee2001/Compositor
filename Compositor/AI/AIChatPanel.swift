@@ -6,7 +6,9 @@ import ShadcnUI
 
 @MainActor
 func codexText(_ key: String) -> String {
-    AppLanguage.selected.localizedBundle.localizedString(forKey: key, value: key, table: "Codex")
+    let bundle = AppLanguage.selected.localizedBundle
+    let providerText = bundle.localizedString(forKey: key, value: key, table: "Providers")
+    return providerText == key ? bundle.localizedString(forKey: key, value: key, table: "Codex") : providerText
 }
 
 /// ShadKit handles streaming Markdown, transcript scrolling and the composer.
@@ -38,6 +40,7 @@ struct AIChatPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            AIProviderControls(chat: chat).padding(.horizontal, 12).padding(.bottom, 10)
             Divider()
             AIConversation(token: scrollToken, style: .compact) {
                 if chat.transcript.items.isEmpty { welcome }
@@ -69,7 +72,7 @@ struct AIChatPanel: View {
             Button(codexText("Cancel"), role: .cancel) { }
             Button(codexText("Allow canvas sharing")) { chat.sharesCanvas = true }
         } message: {
-            Text(codexText("Codex may send a 1024px preview of this document to the signed-in model provider. Original image metadata and the .comp package are not attached. Turn this off at any time."))
+            Text(codexText("A 1024px preview may be sent to the selected provider. Original image metadata and the .comp package are not attached. Turn sharing off at any time."))
         }
         .popover(isPresented: $showsSettings) { connectionSettings.frame(width: 380).padding(18) }
     }
@@ -100,7 +103,7 @@ struct AIChatPanel: View {
         VStack(alignment: .leading, spacing: 6) {
             Toggle(codexText("Share canvas preview"), isOn: Binding(get: { chat.sharesCanvas }, set: { value in
                 if value { confirmsSharing = true } else { chat.sharesCanvas = false }
-            }))
+            })).disabled(chat.provider.kind != .codex && !chat.provider.supportsImages)
             Toggle(codexText("Confirm each image edit"), isOn: $chat.asksBeforeEdits).disabled(chat.isRunning)
         }.toggleStyle(.checkbox).font(.caption).padding(.horizontal, 12).padding(.vertical, 10)
     }
@@ -136,7 +139,8 @@ struct AIChatPanel: View {
     private var connectionSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(codexText("Codex connection")).font(.headline)
-            CodexPreferencesForm()
+            AIProviderControls(chat: chat)
+            DisclosureGroup(codexText("Advanced connection settings")) { CodexPreferencesForm() }
             Text(status).font(.caption)
             if !chat.serverVersion.isEmpty { Text(chat.serverVersion).font(.caption2).textSelection(.enabled) }
             HStack {
@@ -145,7 +149,10 @@ struct AIChatPanel: View {
                 }.disabled(chat.isRunning || chat.isExecutingTool || chat.isConnecting)
                 if chat.isConnected { Button(codexText("Disconnect")) { chat.disconnect() } }
             }
-            if chat.isAuthenticated {
+            if chat.provider.kind != .codex {
+                Text(codexText("This provider uses its saved API key, not your ChatGPT login.")).font(.caption)
+                Text(chat.provider.name).font(.caption.weight(.semibold))
+            } else if chat.isAuthenticated {
                 Text(chat.accountLabel).font(.caption).textSelection(.enabled)
                 Button(codexText("Sign out")) { perform { try await chat.signOut() } }.disabled(chat.isRunning)
             } else {
@@ -159,11 +166,6 @@ struct AIChatPanel: View {
                     }.disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || chat.isConnecting)
                 }
             }
-            if !chat.models.isEmpty {
-                Picker(codexText("Model"), selection: $chat.modelID) {
-                    ForEach(chat.models) { Text($0.title).tag($0.id) }
-                }.disabled(chat.isRunning)
-            } else { TextField(codexText("Model (automatic when empty)"), text: $chat.modelID).disabled(chat.isRunning) }
             Text(codexText("The model list is a catalog, not a guarantee of account access. Authentication is managed by Codex in a separate local home."))
                 .font(.caption2).foregroundStyle(.secondary)
         }

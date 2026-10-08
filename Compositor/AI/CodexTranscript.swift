@@ -103,8 +103,8 @@ nonisolated enum CodexLocalStore {
                                                attributes: [.posixPermissions: 0o700])
         return url
     }
-    static func load(_ documentID: UUID) -> CodexSavedConversation? {
-        guard let url = try? directory("Conversations").appendingPathComponent(documentID.uuidString + ".json"),
+    static func load(_ documentID: UUID, scope: String = "") -> CodexSavedConversation? {
+        guard let url = try? directory(scope.isEmpty ? "Conversations" : scope + "/Conversations").appendingPathComponent(documentID.uuidString + ".json"),
               let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
               let size = attributes[.size] as? NSNumber, size.intValue <= 4 * 1024 * 1024,
               let data = try? Data(contentsOf: url), data.count <= 4 * 1024 * 1024,
@@ -112,15 +112,15 @@ nonisolated enum CodexLocalStore {
               saved.version == CodexSavedConversation.currentVersion, saved.documentID == documentID else { return nil }
         return saved
     }
-    static func save(_ conversation: CodexSavedConversation) throws {
-        let url = try directory("Conversations").appendingPathComponent(conversation.documentID.uuidString + ".json")
+    static func save(_ conversation: CodexSavedConversation, scope: String = "") throws {
+        let url = try directory(scope.isEmpty ? "Conversations" : scope + "/Conversations").appendingPathComponent(conversation.documentID.uuidString + ".json")
         let data = try JSONEncoder().encode(conversation)
         guard data.count <= 4 * 1024 * 1024 else { throw CodexRuntimeError(message: "Conversation is too large to save locally.") }
         try data.write(to: url, options: .atomic)
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
     }
-    static func forget(_ documentID: UUID) throws {
-        let url = try directory("Conversations").appendingPathComponent(documentID.uuidString + ".json")
+    static func forget(_ documentID: UUID, scope: String = "") throws {
+        let url = try directory(scope.isEmpty ? "Conversations" : scope + "/Conversations").appendingPathComponent(documentID.uuidString + ".json")
         if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
     }
 }
