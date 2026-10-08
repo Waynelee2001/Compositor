@@ -20,7 +20,7 @@ The app emits its own model catalog. DeepSeek gets its documented one-million-to
 
 Provider metadata is saved separately from credentials. Keys are stored in macOS Keychain and passed only to the selected child process using `env_key`. They are never placed in UserDefaults, command-line arguments, model catalogs or the UI transcript. Existing ChatGPT authentication and the user's ordinary `~/.codex` remain untouched.
 
-Each provider endpoint revision and model has its own local conversation scope. Switching while a turn, connection or editor tool is active is disabled. Switching closes the old process and restores that provider/model's own conversation; it does **not** forward the previous provider's history. Changing an endpoint rotates its scope. Canvas sharing resets to off on switches; native edit confirmations stay enabled. Previously transmitted data may remain in the prior provider's systems and Codex's local home. Deleting the app's Keychain entry does not revoke the key at its issuer.
+Each provider endpoint revision and model has its own local conversation scope. Switching while a turn, connection or editor tool is active is disabled. Switching closes the old process and restores that provider/model's own conversation; it does **not** forward the previous provider's history. Changing an endpoint or saving a replacement key rotates its scope. Keychain accounts are bound to the normalized endpoint: changing the host, port or base path never silently reuses the previous endpoint’s key. Canvas sharing resets to off on switches; native edit confirmations stay enabled. Previously transmitted data may remain in the prior provider's systems and Codex's local home. Deleting the app's Keychain entry does not revoke the key at its issuer.
 
 ## Appearance
 
@@ -31,3 +31,5 @@ Fresh installs default to **Light**. Settings → General → Appearance and the
 Provider tests cover official presets, URL/port validation, unsafe URLs, TOML quoting, metadata without secrets, endpoint revision isolation and model scopes. A real Codex process talks to a loopback Responses fixture, validating provider key routing, custom model catalogs, streamed assistant output, host tool callbacks and inline image results without external model calls or real credentials. Appearance tests run serially and save native light/dark screenshots while asserting identical PNG exports across themes.
 
 CI results belong to the exact commit/run recorded on the pull request. Passing fixture tests does not mean a real DeepSeek account or arbitrary third-party gateway has been tested. Signed-in API billing, real model output and photograph quality still require account-specific acceptance.
+
+Both the Core Graphics and GPU canvas paths share the same sRGB appearance palette. Theme parity is regression-tested in both appearances; export rendering remains independent of the appearance.

@@ -20,15 +20,15 @@ final class AIProviderStore {
     func save(_ profile: AIProviderProfile, key: String?) throws {
         var value = try profile.validated()
         if let old = profiles.first(where: { $0.id == value.id }),
-           old.baseURL != value.baseURL || old.supportsImages != value.supportsImages { value.revision = UUID().uuidString }
-        if let key, !key.isEmpty { try AIProviderKeys.set(key, for: value.id) }
+           old.baseURL != value.baseURL || old.supportsImages != value.supportsImages || !(key ?? "").isEmpty { value.revision = UUID().uuidString }
+        if let key, !key.isEmpty { try AIProviderKeys.set(key, for: value.keychainAccount()) }
         var next = profiles.filter { $0.id != value.id }; next.append(value)
         let data = try JSONEncoder().encode(next)
         defaults.set(data, forKey: "aiProviderProfiles"); profiles = next
     }
     func remove(_ id: String) throws {
         guard id != "codex", id != "deepseek" else { return }
-        try AIProviderKeys.remove(id)
+        if let profile = profiles.first(where: { $0.id == id }) { try AIProviderKeys.remove(profile.keychainAccount()) }
         let next = profiles.filter { $0.id != id }
         defaults.set(try JSONEncoder().encode(next), forKey: "aiProviderProfiles"); profiles = next
         if preferredID == id { prefer("codex") }

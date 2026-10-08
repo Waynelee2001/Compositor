@@ -98,13 +98,13 @@ struct AIProviderEditor: View {
         .alert(codexText("Delete this provider's saved key?"), isPresented: $confirmsDeleteKey) {
             Button(codexText("Cancel"), role: .cancel) { }
             Button(codexText("Delete"), role: .destructive) {
-                do { try AIProviderKeys.remove(profile.id); key = ""; onSave(profile.id); message = "Saved key deleted." }
+                do { try AIProviderKeys.remove(profile.keychainAccount()); key = ""; onSave(profile.id); message = "Saved key deleted." }
                 catch { message = error.localizedDescription }
             }
         }
     }
     private func credential() throws -> String {
-        key.isEmpty ? (try AIProviderKeys.read(profile.id) ?? "") : key
+        key.isEmpty ? (try AIProviderKeys.read(profile.keychainAccount()) ?? "") : key
     }
     private func run(_ operation: @escaping @MainActor () async throws -> Void) {
         isWorking = true; message = nil

@@ -19,6 +19,10 @@ nonisolated struct AIProviderProfile: Codable, Equatable, Identifiable, Sendable
         Self(id: UUID().uuidString.lowercased(), name: "Custom provider", kind: .responses,
              baseURL: "https://", model: "")
     }
+    /// Bind saved credentials to the exact normalized endpoint, not just an editable profile ID.
+    func keychainAccount() throws -> String {
+        id + "." + Data(try endpoint().absoluteString.utf8).base64EncodedString()
+    }
     var isDeepSeek: Bool { (try? endpoint().host?.lowercased()) == "api.deepseek.com" }
     func acceptsImages(model id: String) -> Bool {
         supportsImages && (!isDeepSeek || ["deepseek-flash", "deepseek-v4-flash", "deepseek-v4-flash-vision-exp"].contains(id))
@@ -98,7 +102,9 @@ nonisolated struct AIProviderProfile: Codable, Equatable, Identifiable, Sendable
         return ["models": .array(ids.enumerated().map { index, id in
             var value: [String: CodexJSON] = [
                 "slug": .string(id), "display_name": .string(id == "deepseek-flash" ? "DeepSeek V4.1 Flash" : id),
-                "description": .string(name), "supported_reasoning_levels": [], "shell_type": "shell_command",
+                "description": .string(name),
+                "base_instructions": "You are Compositor's photo-editing assistant. Follow the application's instructions and use only the supplied editor tools.",
+                "supported_reasoning_levels": [], "shell_type": "shell_command",
                 "visibility": "list", "supported_in_api": true, "priority": .integer(index),
                 "availability_nux": .null, "upgrade": .null, "support_verbosity": false, "default_verbosity": .null,
                 "apply_patch_tool_type": .null, "truncation_policy": ["mode": "tokens", "limit": 10000],

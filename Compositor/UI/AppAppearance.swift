@@ -66,9 +66,14 @@ enum EditorPalette {
     static var well: Color { Color(nsColor: .controlBackgroundColor) }
     static var ruler: NSColor { .controlBackgroundColor }
     static func isDark(_ appearance: NSAppearance) -> Bool { appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua }
-    static func canvas(_ appearance: NSAppearance) -> NSColor { NSColor(white: isDark(appearance) ? 0.105 : 0.90, alpha: 1) }
-    static func checker(_ appearance: NSAppearance, alternate: Bool) -> NSColor {
-        let value: CGFloat = isDark(appearance) ? (alternate ? 0.35 : 0.30) : (alternate ? 0.89 : 0.97)
-        return NSColor(white: value, alpha: 1)
+    // Both CPU and GPU canvases use these exact sRGB values. Chrome must never enter exported pixels.
+    static func canvasWhite(_ appearance: NSAppearance) -> CGFloat { isDark(appearance) ? 0.105 : 0.90 }
+    static func checkerWhite(_ appearance: NSAppearance, alternate: Bool) -> CGFloat {
+        isDark(appearance) ? (alternate ? 0.35 : 0.30) : (alternate ? 0.89 : 0.97)
     }
+    static func edgeWhite(_ appearance: NSAppearance) -> CGFloat { isDark(appearance) ? 1 : 0 }
+    static func canvas(_ appearance: NSAppearance) -> NSColor { gray(canvasWhite(appearance)) }
+    static func checker(_ appearance: NSAppearance, alternate: Bool) -> NSColor { gray(checkerWhite(appearance, alternate: alternate)) }
+    static func edge(_ appearance: NSAppearance) -> NSColor { gray(edgeWhite(appearance)).withAlphaComponent(0.13) }
+    private static func gray(_ value: CGFloat) -> NSColor { NSColor(srgbRed: value, green: value, blue: value, alpha: 1) }
 }

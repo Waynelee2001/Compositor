@@ -17,6 +17,24 @@ struct ProviderTests {
         #expect(!arguments.joined().contains("experimental_bearer_token"))
         #expect(provider.catalog()["models"].array.first?["input_modalities"].array == ["text", "image"])
     }
+    @Test func customCatalogHasRequiredBaseInstructions() {
+        var custom = AIProviderProfile.custom()
+        custom.baseURL = "http://127.0.0.1:1234/v1"; custom.model = "example-model"
+        for profile in [AIProviderProfile.deepSeek, custom] {
+            for model in profile.catalog()["models"].array {
+                #expect(!(model["base_instructions"].string ?? "").isEmpty)
+            }
+        }
+    }
+    @Test func credentialsAreBoundToNormalizedEndpoint() throws {
+        let original = AIProviderProfile.deepSeek
+        var edited = original; edited.baseURL = "https://other-provider.example/v1"
+        #expect(try edited.keychainAccount() != original.keychainAccount())
+        edited.baseURL = "https://api.deepseek.com/responses/"
+        #expect(try edited.keychainAccount() == original.keychainAccount())
+        edited.id = "different-profile"
+        #expect(try edited.keychainAccount() != original.keychainAccount())
+    }
     @Test func endpointsAreNormalizedAndUnsafeAddressesRejected() throws {
         var p = AIProviderProfile.deepSeek
         p.baseURL = "https://example.com:8443/v1/responses/"

@@ -127,7 +127,7 @@ final class AgentChatSession {
             let directory = try CodexLocalStore.directory(root + "Workspace")
             workspace = directory
             var selected = provider; selected.model = modelID
-            let key = selected.kind == .responses ? try AIProviderKeys.read(selected.id) : nil
+            let key = selected.kind == .responses ? try AIProviderKeys.read(selected.keychainAccount()) : nil
             try rpc.launch(executable: binary, home: home, workspace: directory, profile: selected, apiKey: key)
             let handshake = try await rpc.request("initialize", ["clientInfo": [
                 "name": "compositor_photo_editor", "title": "Compositor", "version": "0.2.0"],
