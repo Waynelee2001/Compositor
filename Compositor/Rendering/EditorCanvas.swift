@@ -2652,38 +2652,19 @@ extension CanvasView {
         let mapping = CGAffineTransform(a: perPixel, b: 0, c: 0, d: perPixel, tx: origin.x * device, ty: origin.y * device)
         let full = CGRect(origin: .zero, size: size)
         let rect = pixels.applying(mapping)
-        func gray(_ white: CGFloat, alpha: CGFloat = 1) -> CIImage {
-            CIImage(color: CIColor(red: white, green: white, blue: white, alpha: alpha))
-        }
-        var frame = gray(AppChrome.canvasGray(effectiveAppearance)).cropped(to: full)
+        guard let chrome = GPUCanvasChrome.images(size: size, documentRect: rect,
+                      scale: device, appearance: effectiveAppearance),
+              let background = renderer.image(chrome.background, transient: true),
+              let border = renderer.image(chrome.border, transient: true) else { return nil }
+        var frame = background
         guard rect.intersects(full) else { return frame }
-        // The document's shadow, then its checkerboard: 10-point squares from its top-left corner.
-        let shadow = CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.35)).cropped(to: rect)
-            .transformed(by: CGAffineTransform(translationX: 0, y: 3 * device)).applyingGaussianBlur(sigma: 7 * device)
-        frame = shadow.composited(over: frame)
-        let tile = 10 * device
-        let squares = gray(AppChrome.checkerHigh(effectiveAppearance)).cropped(to: CGRect(x: 0, y: 0, width: tile, height: tile))
-            .composited(over: gray(AppChrome.checkerLow(effectiveAppearance)).cropped(to: CGRect(x: tile, y: 0, width: tile, height: tile)))
-            .composited(over: gray(AppChrome.checkerLow(effectiveAppearance)).cropped(to: CGRect(x: 0, y: tile, width: tile, height: tile)))
-            .composited(over: gray(AppChrome.checkerHigh(effectiveAppearance)).cropped(to: CGRect(x: tile, y: tile, width: tile, height: tile)))
-        let offset = NSAffineTransform()
-        offset.translateX(by: rect.minX, yBy: rect.minY)
-        let checkerboard = squares.applyingFilter("CIAffineTile", parameters: [kCIInputTransformKey: offset]).cropped(to: rect)
-        frame = checkerboard.composited(over: frame)
         // From 200% the document's own pixels are composited one to one and enlarged as crisp squares.
         let crisp = viewport.zoom >= Self.crispZoom
         let placement = GPUPlacement(mapping: crisp ? .identity : mapping, scale: crisp ? 1 : perPixel, renderer: renderer)
         guard var layers = gpuLayers(document, placement: placement) else { return nil }
         if crisp { layers = layers.cropped(to: pixels).samplingNearest().transformed(by: mapping) }
         frame = layers.cropped(to: rect).composited(over: frame)
-        // The document's edge: a one-pixel line centered on it.
-        let edge = gray(AppChrome.isDark(effectiveAppearance) ? 1 : 0, alpha: 0.13)
-        for line in [CGRect(x: rect.minX - 0.5, y: rect.minY - 0.5, width: rect.width + 1, height: 1),
-                     CGRect(x: rect.minX - 0.5, y: rect.maxY - 0.5, width: rect.width + 1, height: 1),
-                     CGRect(x: rect.minX - 0.5, y: rect.minY + 0.5, width: 1, height: rect.height - 1),
-                     CGRect(x: rect.maxX - 0.5, y: rect.minY + 0.5, width: 1, height: rect.height - 1)] {
-            frame = edge.cropped(to: line).composited(over: frame)
-        }
+        frame = border.composited(over: frame)
         return frame.cropped(to: full)
     }
 

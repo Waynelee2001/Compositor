@@ -81,8 +81,9 @@ import Testing
 
     /// Both canvases drawn for `session`; the share of pixels more than 12 levels apart, and the mean difference.
     private func compare(_ session: EditorSession, name: String, width points: Int = 500, height pointsHigh: Int = 400,
-                         backingScale: Int = 2, inWindow: Bool = false) throws -> Difference {
+                         backingScale: Int = 2, inWindow: Bool = false, appearance: NSAppearance? = nil) throws -> Difference {
         let canvas = CanvasView(session: session)
+        canvas.appearance = appearance
         canvas.frame = CGRect(x: 0, y: 0, width: points, height: pointsHigh)
         // Text being typed draws only with its editor, which lives in a window.
         var window: NSWindow?
@@ -141,6 +142,20 @@ import Testing
             Attachment.record(png, named: "\(name).png")
         }
         return Difference(mean: total / Double(width * height * 3), over: Double(over) / Double(width * height))
+    }
+
+    /// Transparent documents expose decoration differences that an opaque image hides.
+    @Test(arguments: [false, true])
+    func canvasChromeMatchesInBothThemes(dark: Bool) throws {
+        guard GPUCanvasRenderer.shared != nil else { return }
+        let session = EditorSession()
+        session.viewport.resize(to: CGSize(width: 500, height: 400), backingScale: 2, documentSize: nil)
+        session.createDocument(width: 600, height: 500)
+        session.zoom(to: 1)
+        let appearance = try #require(NSAppearance(named: dark ? .darkAqua : .aqua))
+        let difference = try compare(session, name: dark ? "chrome-dark" : "chrome-light", appearance: appearance)
+        #expect(difference.mean < 1.5 && difference.over < 0.005,
+                "mean \(difference.mean), over 12 levels \(difference.over * 100)%")
     }
 
     @Test(arguments: [1.0, 2.0 / 3.0, 1.0 / 3.0, 2.0])
