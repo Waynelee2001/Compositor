@@ -1,0 +1,216 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Updates": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新"
+          }
+        }
+      }
+    },
+    "Software Update": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "软件更新"
+          }
+        }
+      }
+    },
+    "Current version": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前版本"
+          }
+        }
+      }
+    },
+    "Last checked": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次检查"
+          }
+        }
+      }
+    },
+    "Check for Updates…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查更新…"
+          }
+        }
+      }
+    },
+    "Install and Restart": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装并重启"
+          }
+        }
+      }
+    },
+    "Automatically check for updates": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动检查更新"
+          }
+        }
+      }
+    },
+    "Check for a newer version of Compositor AI.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查 Compositor AI 是否有新版本。"
+          }
+        }
+      }
+    },
+    "Updates are downloaded and installed inside the app. You choose when to restart.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在软件内完成下载和安装，由你决定何时重启。"
+          }
+        }
+      }
+    },
+    "Automatic checks only notify you. Installation and restart require your confirmation. API keys, chats and projects are not sent to the update server.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动检查只会提醒；安装和重启仍需确认。不会向更新服务器发送 API 密钥、聊天记录或项目。"
+          }
+        }
+      }
+    },
+    "This build does not have a valid signed update channel.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此版本没有有效的签名更新通道，请联系维护者。"
+          }
+        }
+      }
+    },
+    "Checking for updates…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查更新…"
+          }
+        }
+      }
+    },
+    "Finish or stop the AI task and any file operations, then click Install and Restart.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先完成或停止 AI 任务以及文件操作，再点击“安装并重启”。"
+          }
+        }
+      }
+    },
+    "Restart cancelled. Your current app and documents are unchanged.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消重启，当前软件和文档保持不变。"
+          }
+        }
+      }
+    },
+    "The update is not from this app's signed distribution channel.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新包不属于本应用的签名发布通道。"
+          }
+        }
+      }
+    },
+    "A new version is available. Follow the update window to download and install it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发现新版本，请在更新窗口中下载并安装。"
+          }
+        }
+      }
+    },
+    "No compatible newer version is available.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前没有适用于这台 Mac 的更新版本。"
+          }
+        }
+      }
+    },
+    "Download complete. The update signature will be verified before installation.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载完成，安装前将校验更新签名。"
+          }
+        }
+      }
+    },
+    "The update did not complete. You can try again; the current app is still installed.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新未完成，可以重试；当前版本仍然保留。"
+          }
+        }
+      }
+    },
+    "Download cancelled. The current app is unchanged.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消下载，当前版本保持不变。"
+          }
+        }
+      }
+    },
+    "The app is preparing to restart for an update. Cancel the restart before sending another message.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "软件正准备安装更新并重启。要发送新消息，请先取消重启。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

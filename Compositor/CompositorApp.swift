@@ -102,7 +102,7 @@ struct CompositorApp: App {
                 // Grouped: a commands builder takes at most ten items.
                 Group {
                     CommandGroup(after: .appInfo) {
-                        Button("Check for Updates…") { applicationDelegate.updater.checkForUpdates(nil) }
+                        Button("Check for Updates…") { applicationDelegate.updater.check() }
                     }
                     CommandGroup(after: .toolbar) {
                         // With a dialog's preview open (Export JPEG), these zoom that preview rather than the canvas.
@@ -351,7 +351,7 @@ struct CompositorApp: App {
                 }
             }
         Settings {
-            AppLanguageSettingsView()
+            AppLanguageSettingsView(updater: applicationDelegate.updater)
                 .environment(\.locale, appLanguage.locale)
                 .preferredColorScheme((AppTheme(rawValue: appTheme) ?? .light).colorScheme)
                 .onChange(of: appTheme) { _, _ in AppTheme.selected.apply() }
