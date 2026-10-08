@@ -13,10 +13,14 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Archive tracked source only
-        run: git archive --format=tar.gz --output=/tmp/compositor-source.tar.gz HEAD
+      - name: Archive tracked source and exact revision
+        run: |
+          git archive --format=tar.gz --output=/tmp/compositor-source.tar.gz HEAD
+          git rev-parse HEAD > /tmp/source-commit.txt
       - uses: actions/upload-artifact@v7
         with:
           name: compositor-source
-          path: /tmp/compositor-source.tar.gz
+          path: |
+            /tmp/compositor-source.tar.gz
+            /tmp/source-commit.txt
           retention-days: 3
