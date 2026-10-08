@@ -2,7 +2,7 @@ name: Codex Integration
 
 on:
   push:
-    branches: [feat/codex-app-server-ui]
+    branches: [feat/codex-app-server-ui, feat/providers-and-appearance]
   workflow_dispatch:
 
 permissions:
@@ -27,6 +27,10 @@ jobs:
         run: python3 scripts/prepare_codex_binary.py --out .codex-ci
       - name: Real Codex protocol smoke test (no account or inference)
         run: python3 scripts/codex_protocol_smoke.py --codex .codex-ci/codex
+      - name: Verify custom provider and image-tool round trip without vendor inference
+        run: |
+          swiftc Compositor/AI/AIProviderProfile.swift scripts/export_provider_fixture.swift -o /tmp/compositor-provider-fixture
+          python3 scripts/provider_protocol_smoke.py --codex .codex-ci/codex --fixture-generator /tmp/compositor-provider-fixture
       - name: Resolve pinned Swift packages
         run: >
           xcodebuild -resolvePackageDependencies -project Compositor.xcodeproj
@@ -68,12 +72,12 @@ jobs:
           codesign --force --sign - --options runtime --timestamp=none "$APP"
           codesign --verify --deep --strict "$APP"
           python3 scripts/codex_protocol_smoke.py --codex "$APP/Contents/Helpers/codex"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" Compositor-Codex-arm64.zip
+          ditto -c -k --sequesterRsrc --keepParent "$APP" Compositor-Providers-Themes-arm64.zip
       - name: Upload development app
         uses: actions/upload-artifact@v7
         with:
-          name: Compositor-Codex-arm64-development
-          path: Compositor-Codex-arm64.zip
+          name: Compositor-Providers-Themes-arm64-development
+          path: Compositor-Providers-Themes-arm64.zip
           retention-days: 7
       - name: Upload diagnostics on failure
         if: failure()

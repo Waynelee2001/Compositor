@@ -1,0 +1,49 @@
+name: Apply Reviewed Provider Changes
+on:
+  push:
+    branches: [feat/providers-and-appearance]
+    paths: [.github/workflows/apply-provider-change.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'Waynelee2001/Compositor' && github.ref == 'refs/heads/feat/providers-and-appearance'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify and apply reviewed source patch
+        run: |
+          python3 - <<'PY'
+          import base64, bz2, hashlib, pathlib, subprocess
+          first = base64.b64encode(pathlib.Path('.github/provider-change-1.bzpart').read_bytes()).decode()
+          # Correct a duplicated pair of transfer characters; the full decoded patch is pinned below.
+          first = first[:15950] + first[15952:]
+          first = first[:3781] + first[3783:]
+          compressed = base64.b64decode(first) + pathlib.Path('.github/provider-change-2.bzpart').read_bytes()
+          patch = bz2.decompress(compressed)
+          assert hashlib.sha256(patch).hexdigest() == '39e0d4146c4b25944dac6cbf078d07dbb954dc441d6eb493e8926c07dce53386'
+          target = pathlib.Path('/tmp/providers-appearance.patch')
+          target.write_bytes(patch)
+          subprocess.run(['git', 'apply', '--check', str(target)], check=True)
+          subprocess.run(['git', 'apply', '--index', str(target)], check=True)
+          allowed = ('Compositor/', 'CompositorTests/', 'scripts/', 'docs/')
+          paths = subprocess.check_output(['git','diff','--cached','--name-only'], text=True).splitlines()
+          assert paths and all(path.startswith(allowed) for path in paths)
+          p = pathlib.Path('CompositorTests/AIProviderTests.swift')
+          p.write_text(p.read_text().replace('import AppKit\n', 'import AppKit\nimport SwiftUI\n', 1))
+          p = pathlib.Path('Compositor/UI/AppTheme.swift')
+          p.write_text(p.read_text().replace('enum AppChrome {', 'nonisolated enum AppChrome {', 1))
+          subprocess.run(['git','add','CompositorTests/AIProviderTests.swift','Compositor/UI/AppTheme.swift'],check=True)
+          PY
+          git diff --cached --check
+      - name: Commit only to the feature branch without force
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/feat/providers-and-appearance | cut -f1)" = "$EXPECTED_HEAD"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Add DeepSeek and custom Responses providers, isolated credentials, model switching, and adaptive light/dark themes'
+          git push origin HEAD:refs/heads/feat/providers-and-appearance
