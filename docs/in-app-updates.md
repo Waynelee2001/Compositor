@@ -1,36 +1,51 @@
 # In-app updates for Compositor AI
 
-The Compositor-Codex distribution uses the pinned Sparkle 2.10.0 dependency. Settings > Updates and the app menu offer Check for Updates. Sparkle handles release notes, download progress, errors and Install and Relaunch. Automatic checks are opt-in; installation and restart remain user-confirmed.
+## Current delivery status
 
-Install the first update-enabled build, 1.5.0 (100), once into a writable Applications folder. The previous 1.4.5 AI development build has no feed and cannot bootstrap this feature itself. Subsequent upgrades still download bytes, but the app handles the process.
+The updater implementation at f2891e3ffa6822484be8f072ecf06c2e0f6f09c8 passed both Verify #64 (37742645044) and Codex Integration #14 (37742645006), including standard/Codex builds, unit tests, serial window tests, update validation and development packaging. The artifact Compositor-AI-Updates-arm64-development contains Compositor-AI-Updates-arm64.zip and a source ZIP.
 
-## Safety and persistence
+This is a **client implementation and test package**, not an activated public update service. The updates-codex/appcast.xml feed is currently empty. No matching signing secret has been provisioned through this chat, no owner private-key archive has been supplied, and no installed-Mac update round trip is claimed. Do not distribute the preliminary installer as the permanent update bootstrap before owner signing setup and initial release publication are complete.
 
-Only this fork's AI release assets are accepted. The app pins an Ed25519 public key and verifies archives before extraction. Its persistent feed is on the updates-codex branch, not main, the upstream author's feed or an expiring Actions artifact URL. Keep that branch.
+## How it works
 
-Updating replaces the application bundle, not Application Support, UserDefaults, Keychain entries or project files. The bundle identifier remains com.waynelee.compositor.codex. The existing quit/save/cancel flow covers every project tab. Active AI turns and image/file work postpone restart; Settings then offers Install and Restart. New AI messages are blocked while preparing to quit. Cancelling the save prompt cancels restart.
+The Compositor-Codex distribution uses pinned Sparkle 2.10.0. Settings > Updates and the app menu offer Check for Updates. Sparkle presents release notes, download progress, errors and Install and Relaunch. Automatic checks are opt-in; installation and restart remain user-confirmed.
 
-Update requests do not contain model API keys, photos, chats or projects. An update signature is not an Apple Developer ID signature: this is still an ad-hoc-signed, non-notarized development build. No Gatekeeper bypass is installed or requested.
+After signing is configured and the initial release is published, install that first release once into a writable Applications folder. The previous 1.4.5 AI build has no usable update feed and cannot bootstrap this feature itself. Subsequent upgrades still download bytes, but the app handles the download and installation.
 
-## One-time owner setup
+Only this fork's AI release assets are accepted. The app pins an Ed25519 public key and verifies archives before extraction. Its persistent feed is on updates-codex, separate from main, the upstream author's distribution and expiring Actions artifact links. Keep that branch.
 
-Store the matching base64 Ed25519 private seed in the repository Actions secret SPARKLE_PRIVATE_KEY. Back it up offline. Never commit it, embed it in the app, put it in release notes or upload it as an Actions artifact. The public key is tracked in Config/SparklePublicKey.txt and InfoCodex.plist.
+Updating replaces the app bundle, not Application Support, UserDefaults, Keychain entries or project files. The bundle identifier remains com.waynelee.compositor.codex. The existing quit/save/cancel flow covers every project tab. Active AI turns and image/file work postpone restart; Settings then offers Install and Restart. New AI messages are blocked while preparing to quit. Cancelling the save prompt cancels restart.
 
-The separately supplied owner-only setup archive can set the secret through gh secret set using standard input, or open GitHub's secret settings. It does not request a GitHub token in chat. The current connector cannot administer repository secrets; creating a workflow does not mean the secret has been configured. The first release may instead use an owner-generated detached signature, which contains no private key. Future automated signing needs the one-time secret.
+An update signature is not an Apple Developer ID signature. These packages remain ad-hoc-signed, non-notarized development builds. No Gatekeeper bypass is installed or requested.
+
+## 一次性发布初始化（在仓库所有者的 Mac 上运行）
+
+当前聊天连接器不能管理 GitHub Secrets，不能声称签名密钥已配置。不要把 GitHub Token 或签名私钥粘贴到聊天、源代码、发布说明或 Actions 日志里。
+
+已经加入 scripts/setup_update_signing.swift，依赖 Xcode Command Line Tools 和 GitHub CLI。先用 gh auth login --hostname github.com 登录仓库所有者账号。在本地仓库切到 feat/in-app-updates 并拉取最新代码后运行：
+
+```sh
+swift scripts/setup_update_signing.swift --self-test
+swift scripts/setup_update_signing.swift --configure
+```
+
+该脚本只允许初始化尚未发布的通道。它会先检查更新源为空且没有已经发布的 ai-v 安装包，再在你的 Mac 钥匙串生成/读取私钥，通过标准输入交给 gh secret set SPARKLE_PRIVATE_KEY，并把匹配的公钥原子提交到功能分支。不会修改 main，不会把私钥打印到终端或写入 Git。分支有并发修改时拒绝强制覆盖。首次初始化将重新构建带有你所掌握公钥的安装包，因此之前的临时测试包不应作为长期更新入口分发。
+
+自测模式不访问钥匙串、网络或 GitHub 账号。--configure 会管理你本人仓库的发布密钥并更新三个公开配置文件；请先审阅脚本再运行。保管好钥匙串中的签名密钥并进行安全备份；不能用一个新私钥替代已经发布版本信任的旧私钥。
 
 ## Publishing future updates
 
-1. Increment CURRENT_PROJECT_VERSION in the Codex configuration above all published builds and set MARKETING_VERSION. Keep the bundle identifier, key, feed and existing AI features unchanged.
-2. Push to feat/in-app-updates and let Codex Integration pass. It runs protocol tests, release validation, macOS builds, unit and window tests and packages the embedded Codex helper.
-3. Commit release/codex.json with real run_id, source_sha, version, build, archive_sha256 and plain-text notes. An optional detached signature permits signing outside CI; otherwise the secret is required. Never place the private key in this JSON.
-4. Publish signed Compositor AI update retrieves only the matching successful workflow artifact and checks identity, checksum, signature, helper, architecture and code signature. It creates a prerelease tagged ai-v<version>-b<build> with Compositor-AI-arm64.zip. It verifies the uploaded asset digest before advertising it in the feed. It never changes main, the upstream feed or the latest stable release pointer.
+1. Increment CURRENT_PROJECT_VERSION in the Codex configuration above all published builds and set MARKETING_VERSION. Keep bundle ID, public key, feed and existing AI features unchanged.
+2. Push to feat/in-app-updates and let Codex Integration pass. It tests the real signed-out Codex protocol and local provider fixture, update publication checks, macOS builds, unit/window tests and the embedded helper package.
+3. Commit release/codex.json with actual run_id, source_sha, version, build, archive_sha256 and plain-text notes. An optional owner-generated detached signature permits signing outside CI; otherwise SPARKLE_PRIVATE_KEY is required. Never put the private key in this JSON.
+4. Publish signed Compositor AI update retrieves only the matching successful artifact and checks identity, checksum, signature, helper, architecture and code signature. It creates ai-v<version>-b<build> as a prerelease with Compositor-AI-arm64.zip and checks the uploaded digest before advertising it in the feed. Main, the upstream feed and the latest stable release pointer are untouched.
 
-The workflow branch filters intentionally target this feature branch. Change both filters explicitly when integrating into a permanent release branch; the updates-codex URL stays stable. A code push alone is not a published update.
+Branch filters intentionally target this feature branch. Change them explicitly when integrating into a permanent release branch; the updates-codex feed URL stays stable. A code push alone is not a published update.
 
-Failed signatures, failed builds, wrong editions, missing helpers and duplicate or older build numbers stop publication. If a release is created but the feed push fails, leave the asset unchanged and reconcile the feed; never overwrite an already advertised archive.
+Failed signatures, failed builds, wrong editions, missing helpers and duplicate/older builds stop publication. If release creation succeeds but the feed push fails, keep the asset unchanged and reconcile the feed. Never overwrite an advertised archive.
 
-## Validation limits
+## Acceptance limits
 
-Tests cover update source/configuration policy, no-network test hosts, active AI work, explicitly delayed restarts, retained drafts, Ed25519 valid/tampered/wrong-key cases, release metadata and monotonic feed publication. A successful build alone is not proof of an installed app completing an in-place upgrade. Actual upgrade, save/cancel interactions and Keychain prompts remain Mac acceptance checks with a disposable project.
+Automated tests do not prove a physical Mac completed an in-place upgrade. Actual initial installation, download/install/relaunch, project-save cancellation, signing bootstrap permissions and Keychain prompts still require interactive owner acceptance. The added signing helper is checked independently by Update Signing Setup Checks; its self-tests deliberately do not provision a real credential.
 
-Official references: https://sparkle-project.org/documentation/ and https://sparkle-project.org/documentation/api-reference/Protocols/SPUUpdaterDelegate.html
+Official references: https://sparkle-project.org/documentation/ and https://sparkle-project.org/documentation/publishing/
