@@ -63,9 +63,11 @@ nonisolated struct AIProviderProfile: Codable, Equatable, Identifiable, Sendable
         value.knownModels = Array(Set((knownModels + [value.model]).filter { !$0.isEmpty && $0.count <= 200 })).sorted()
         return value
     }
-    /// JSON string syntax is also valid for the simple TOML strings used in -c overrides.
+    /// TOML accepts these JSON string escapes except optional escaped forward slashes.
     static func quoted(_ value: String) -> String {
-        String(decoding: try! JSONEncoder().encode(value), as: UTF8.self)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.withoutEscapingSlashes]
+        return String(decoding: try! encoder.encode(value), as: UTF8.self)
     }
     func overrides(catalog: URL) throws -> [String] {
         guard !isCodex else { return [] }
