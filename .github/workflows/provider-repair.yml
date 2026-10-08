@@ -11,13 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Apply reviewed source repair and remove temporary tooling
+      - name: Apply reviewed source repair only
         run: |
           set -euo pipefail
           python3 scripts/apply-provider-repair.py
+          git restore .github/workflows/providers-themes.yml
           git diff --check
-          git rm scripts/apply-provider-repair.py .github/workflows/provider-repair.yml
-          git add Compositor CompositorTests docs .github/workflows/providers-themes.yml
+          git rm scripts/apply-provider-repair.py
+          git add Compositor CompositorTests docs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Fix custom provider catalogs, CPU/GPU theme parity, and endpoint-scoped credentials'
