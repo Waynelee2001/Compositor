@@ -44,6 +44,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 }
 
 struct AppLanguageSettingsView: View {
+    @ObservedObject var updater: AppUpdater
     @AppStorage("appLanguage") private var languageRawValue = AppLanguage.system.rawValue
     @State private var showsRestartNotice = false
     private var language: Binding<AppLanguage> {
@@ -62,7 +63,8 @@ struct AppLanguageSettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
             }.padding(20).tabItem { Label("Codex", systemImage: "sparkles") }
-        }.padding(12).frame(width: 520, height: 380)
+            UpdateSettingsView(updater: updater).tabItem { Label(updateText("Updates"), systemImage: "arrow.down.circle") }
+        }.padding(12).frame(width: 540, height: 440)
     }
     private var languageForm: some View {
         Form {

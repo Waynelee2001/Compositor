@@ -2,7 +2,8 @@ name: Codex Integration
 
 on:
   push:
-    branches: [feat/codex-app-server-ui, feat/providers-and-appearance]
+    branches: [feat/codex-app-server-ui, feat/providers-and-appearance, feat/in-app-updates]
+    paths-ignore: ["release/**", "docs/**"]
   workflow_dispatch:
 
 permissions:
@@ -31,6 +32,10 @@ jobs:
         run: |
           swiftc Compositor/AI/AIProviderProfile.swift scripts/export_provider_fixture.swift -o /tmp/compositor-provider-fixture
           python3 scripts/provider_protocol_smoke.py --codex .codex-ci/codex --fixture-generator /tmp/compositor-provider-fixture
+      - name: Update release validation
+        run: |
+          python3 scripts/test_update_release.py
+          swift scripts/update_signature.swift self-test
       - name: Resolve pinned Swift packages
         run: >
           xcodebuild -resolvePackageDependencies -project Compositor.xcodeproj
@@ -72,12 +77,15 @@ jobs:
           codesign --force --sign - --options runtime --timestamp=none "$APP"
           codesign --verify --deep --strict "$APP"
           python3 scripts/codex_protocol_smoke.py --codex "$APP/Contents/Helpers/codex"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" Compositor-Providers-Themes-arm64.zip
+          ditto -c -k --sequesterRsrc --keepParent "$APP" Compositor-AI-Updates-arm64.zip
+          git archive --format=zip --output=Compositor-AI-Updates-source.zip HEAD
       - name: Upload development app
         uses: actions/upload-artifact@v7
         with:
-          name: Compositor-Providers-Themes-arm64-development
-          path: Compositor-Providers-Themes-arm64.zip
+          name: Compositor-AI-Updates-arm64-development
+          path: |
+            Compositor-AI-Updates-arm64.zip
+            Compositor-AI-Updates-source.zip
           retention-days: 7
       - name: Upload diagnostics on failure
         if: failure()

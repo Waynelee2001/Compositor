@@ -6,8 +6,7 @@ final class CompositorApplicationDelegate: NSObject, NSApplicationDelegate {
     var session: EditorSession { workspace.current.session }
     var projects: ProjectController { workspace.current.controller }
     var showEditor: (() -> Void)?
-    /// The Codex configuration deliberately has no upstream update feed.
-    let updater = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
+    let updater = AppUpdater()
 
     func application(_ application: NSApplication, open urls: [URL]) {
         if !application.windows.contains(where: { $0.isVisible && $0.identifier?.rawValue.hasPrefix("editor") == true }) {
@@ -29,17 +28,29 @@ final class CompositorApplicationDelegate: NSObject, NSApplicationDelegate {
         SliderSnap.install()
     }
     func applicationDidFinishLaunching(_ notification: Notification) {
-        #if !CODEX_INTEGRATION
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [updater] in updater.startUpdater() }
-        #endif
+        updater.isDocumentBusy = { [weak self] in
+            guard let self else { return true }
+            return self.workspace.isManaging || self.workspace.tabs.contains {
+                $0.session.isProjectBusy || $0.session.isImporting
+            }
+        }
+        updater.start()
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag { showEditor?() }
         return true
     }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard !workspace.isManaging else { return .terminateCancel }
-        Task { sender.reply(toApplicationShouldTerminate: await workspace.confirmQuit()) }
+        guard !workspace.isManaging else { updater.terminationWasCancelled(); return .terminateCancel }
+        if UpdateActivity.preparingRestart && UpdateActivity.hasActiveChat {
+            updater.terminationWasCancelled()
+            return .terminateCancel
+        }
+        Task {
+            let confirmed = await workspace.confirmQuit()
+            if !confirmed { updater.terminationWasCancelled() }
+            sender.reply(toApplicationShouldTerminate: confirmed)
+        }
         return .terminateLater
     }
 }

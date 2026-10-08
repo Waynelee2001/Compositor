@@ -10,26 +10,59 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Apply reviewed source changes with original-file hash checks
-        env:
-          PAYLOAD: |
-            eNrdfQtb20iy6F9RmJ2xHWz5/SQk44CTeIcAB0NmZwOfkaU2aGNLXkmGeDL891tV3S21HjYmydx7bvgSsKV+1ru6q6u/7Ji3zPzk7/S+7By484Xr24HrlS8WlhEwX/w9dWe2udL9e3sa7PSc5WxWzCrcXyz4R+/RouKv/tn0A892bvyMssOTcvQN2oYxGIHtOodsxm6gtuxkp97oTqedSrczrTTaU7PdrpgNs9NtszarTlvdbnUyqVtto141DKNdmVYb9dakNp1UTLNbq5kW24l1G+sz7MOs1TvtidVsTM1Kq93odifVsTM1Kq93odif
+      - name: Connect updater to existing source with exact preimage checks
         run: |
           python3 - <<'PY'
-          import base64, hashlib, json, os, pathlib, subprocess, tempfile, zlib
+          import hashlib, json, os, pathlib, plistlib, subprocess
           assert os.environ['GITHUB_REF'] == 'refs/heads/feat/in-app-updates'
-          payload = json.loads(zlib.decompress(base64.b64decode(os.environ['PAYLOAD'])))
-          root = pathlib.Path.cwd().resolve()
-          for name, expected in payload['checks'].items():
-              path = root / name
-              assert path.resolve().is_relative_to(root), name
-              actual = hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
-              assert actual == expected, 'Source changed; refusing to overwrite: ' + name
-          with tempfile.NamedTemporaryFile(mode='w', suffix='.patch') as patch:
-              patch.write(payload['patch']); patch.flush()
-              subprocess.run(['git', 'apply', '--check', patch.name], check=True)
-              subprocess.run(['git', 'apply', patch.name], check=True)
-          subprocess.run(['git', 'add', '--', *payload['checks'].keys()], check=True)
-          subprocess.run(['git', '-c', 'user.name=github-actions[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', 'Add signed in-app updates, safe restart, tests and release workflow'], check=True)
+          expected = {
+              'Compositor/CompositorApp.swift': 'c2387bd54fc067499bed0034acf1ef34863cdef001d3086cb42cb8e13ac6b9a5',
+              'Compositor/AI/CodexChatSession.swift': 'b3a7fbd00e2879bc78638e30e6b149144261798bd8c471db0e13753e11f7f754',
+              'Config/InfoCodex.plist': '723e49c0ede553d8148e26252ba827ca09e34eed13f9fc0b687989c6f6a6d3c4',
+              'Compositor.xcodeproj/project.pbxproj': 'f0d2f980a7aa883948131e8c2356de4f0a040c6f1665a85af2594f92e22d8c13',
+              '.gitignore': 'fb93e3a6a6b451ebc3a0c0e8c98c68378eddf05b9b5ddde9eb8c886470eb63c2'
+          }
+          for name, digest in expected.items():
+              assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() == digest, 'Source changed: ' + name
+          def replace(name, old, new):
+              path = pathlib.Path(name); text = path.read_text()
+              assert text.count(old) == 1, 'Expected one source anchor in ' + name
+              path.write_text(text.replace(old, new))
+          replace('Compositor/CompositorApp.swift', 'applicationDelegate.updater.checkForUpdates(nil)', 'applicationDelegate.updater.check()')
+          replace('Compositor/CompositorApp.swift', 'AppLanguageSettingsView()', 'AppLanguageSettingsView(updater: applicationDelegate.updater)')
+          replace('Compositor/AI/CodexChatSession.swift', '    init() {\n', '    init() {\n        UpdateActivity.register(self)\n')
+          replace('Compositor/AI/CodexChatSession.swift', '    func send(using session: EditorSession) async {\n', '    func send(using session: EditorSession) async {\n        guard !UpdateActivity.preparingRestart else {\n            errorMessage = updateText("The app is preparing to restart for an update. Cancel the restart before sending another message.")\n            return\n        }\n')
+          replace('Compositor.xcodeproj/project.pbxproj', 'COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 40; DEAD_CODE_STRIPPING = YES; DEVELOPMENT_TEAM = "";', 'COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 100; DEAD_CODE_STRIPPING = YES; DEVELOPMENT_TEAM = "";')
+          replace('Compositor.xcodeproj/project.pbxproj', 'MARKETING_VERSION = 1.4.5; PRODUCT_BUNDLE_IDENTIFIER = com.waynelee.compositor.codex;', 'MARKETING_VERSION = 1.5.0; PRODUCT_BUNDLE_IDENTIFIER = com.waynelee.compositor.codex;')
+          info_path = pathlib.Path('Config/InfoCodex.plist')
+          info = plistlib.loads(info_path.read_bytes())
+          info.update(SUFeedURL='https://raw.githubusercontent.com/Waynelee2001/Compositor/updates-codex/appcast.xml', SUPublicEDKey=pathlib.Path('Config/SparklePublicKey.txt').read_text().strip(), SUVerifyUpdateBeforeExtraction=True, SUSendProfileInfo=False, SUScheduledCheckInterval=86400, SUAutomaticallyUpdate=False)
+          info_path.write_bytes(plistlib.dumps(info, sort_keys=False))
+          translations = {
+              'Updates': '更新', 'Software Update': '软件更新', 'Current version': '当前版本', 'Last checked': '上次检查',
+              'Check for Updates…': '检查更新…', 'Install and Restart': '安装并重启', 'Automatically check for updates': '自动检查更新',
+              'Check for a newer version of Compositor AI.': '检查 Compositor AI 是否有新版本。',
+              'Updates are downloaded and installed inside the app. You choose when to restart.': '在软件内完成下载和安装，由你决定何时重启。',
+              'Automatic checks only notify you. Installation and restart require your confirmation. API keys, chats and projects are not sent to the update server.': '自动检查只会提醒；安装和重启仍需确认。不会向更新服务器发送 API 密钥、聊天记录或项目。',
+              'This build does not have a valid signed update channel.': '此版本没有有效的签名更新通道，请联系维护者。',
+              'Checking for updates…': '正在检查更新…',
+              'Finish or stop the AI task and any file operations, then click Install and Restart.': '请先完成或停止 AI 任务以及文件操作，再点击“安装并重启”。',
+              'Restart cancelled. Your current app and documents are unchanged.': '已取消重启，当前软件和文档保持不变。',
+              "The update is not from this app's signed distribution channel.": '更新包不属于本应用的签名发布通道。',
+              'A new version is available. Follow the update window to download and install it.': '发现新版本，请在更新窗口中下载并安装。',
+              'No compatible newer version is available.': '目前没有适用于这台 Mac 的更新版本。',
+              'Download complete. The update signature will be verified before installation.': '下载完成，安装前将校验更新签名。',
+              'The update did not complete. You can try again; the current app is still installed.': '更新未完成，可以重试；当前版本仍然保留。',
+              'Download cancelled. The current app is unchanged.': '已取消下载，当前版本保持不变。',
+              'The app is preparing to restart for an update. Cancel the restart before sending another message.': '软件正准备安装更新并重启。要发送新消息，请先取消重启。'
+          }
+          catalog = {'sourceLanguage': 'en', 'strings': {key: {'localizations': {'zh-Hans': {'stringUnit': {'state': 'translated', 'value': value}}}} for key, value in translations.items()}, 'version': '1.0'}
+          pathlib.Path('Compositor/Updates/Updates.xcstrings').write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n')
+          with pathlib.Path('.gitignore').open('a') as f:
+              f.write('\n# Update-signing private material (the public key is deliberately tracked)\n*private*key*\nupdate-owner-private/\n*.key\n__pycache__/\n')
+          subprocess.run(['python3', 'scripts/test_update_release.py'], check=True)
+          subprocess.run(['git', 'diff', '--check'], check=True)
+          subprocess.run(['git', 'add', '--', *expected.keys(), 'Compositor/Updates/Updates.xcstrings'], check=True)
+          subprocess.run(['git', '-c', 'user.name=github-actions[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', 'Connect signed updater to settings, save flow and AI session lifecycle'], check=True)
           subprocess.run(['git', 'push', 'origin', 'HEAD:refs/heads/feat/in-app-updates'], check=True)
           PY
