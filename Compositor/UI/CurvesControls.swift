@@ -18,19 +18,19 @@ struct CurvesControls: View {
                     grid.move(to: CGPoint(x: f*size.width, y: 0)); grid.addLine(to: CGPoint(x: f*size.width, y: size.height))
                     grid.move(to: CGPoint(x: 0, y: f*size.height)); grid.addLine(to: CGPoint(x: size.width, y: f*size.height))
                 }
-                context.stroke(grid, with: .color(.white.opacity(0.12)), lineWidth: 1)
+                context.stroke(grid, with: .color(.primary.opacity(0.12)), lineWidth: 1)
                 var line = Path()
                 for x in 0...255 {
                     let p = position(CurvePoint(x: Double(x), y: settings.value(Double(x), channel: settings.channel.index)))
                     if x == 0 { line.move(to: p) } else { line.addLine(to: p) }
                 }
-                context.stroke(line, with: .color(.white), lineWidth: 2)
+                context.stroke(line, with: .color(.primary), lineWidth: 2)
                 for (i, point) in points.enumerated() {
                     let p = position(point)
-                    context.fill(Path(ellipseIn: CGRect(x: p.x-4, y: p.y-4, width: 8, height: 8)), with: .color(selected == i ? .accentColor : .white))
+                    context.fill(Path(ellipseIn: CGRect(x: p.x-4, y: p.y-4, width: 8, height: 8)), with: .color(selected == i ? .accentColor : .primary))
                 }
             }
-            .frame(height: 260).background(Color.black.opacity(0.35))
+            .frame(height: 260).background(EditorPalette.graphColor)
             .contentShape(Rectangle())
             .overlay { GeometryReader { geometry in
                 Color.clear.contentShape(Rectangle()).gesture(DragGesture(minimumDistance: 0).onChanged { event in

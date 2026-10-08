@@ -21,7 +21,7 @@ struct RawDevelopSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(String(format: "Develop “%@”".localizedUI, url.lastPathComponent)).font(.title2.bold())
             ZStack {
-                RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.35))
+                RoundedRectangle(cornerRadius: 6).fill(EditorPalette.graphColor)
                 if let preview {
                     Image(decorative: preview, scale: 1)
                         .resizable().aspectRatio(contentMode: .fit)

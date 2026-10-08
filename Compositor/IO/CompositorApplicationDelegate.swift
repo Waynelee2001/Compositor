@@ -24,7 +24,7 @@ final class CompositorApplicationDelegate: NSObject, NSApplicationDelegate {
         _ = try? event.sendEvent(options: .noReply, timeout: 1)
     }
     func applicationWillFinishLaunching(_ notification: Notification) {
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+        AppTheme.selected.apply()
         SliderSnap.install()
     }
     func applicationDidFinishLaunching(_ notification: Notification) {

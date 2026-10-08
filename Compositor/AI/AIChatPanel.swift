@@ -16,6 +16,8 @@ struct AIChatPanel: View {
     @Bindable var chat: AgentChatSession
     var width: CGFloat
     @State private var showsSettings = false
+    @State private var showsProfiles = false
+    @Bindable private var profiles = ModelProfileStore.shared
     @State private var confirmsSharing = false
     @State private var apiKey = ""
     @State private var answers: [String: String] = [:]
@@ -38,6 +40,7 @@ struct AIChatPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            profileSelector
             Divider()
             AIConversation(token: scrollToken, style: .compact) {
                 if chat.transcript.items.isEmpty { welcome }
@@ -67,11 +70,25 @@ struct AIChatPanel: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in chat.disconnect() }
         .alert(codexText("Share the canvas with the model?"), isPresented: $confirmsSharing) {
             Button(codexText("Cancel"), role: .cancel) { }
-            Button(codexText("Allow canvas sharing")) { chat.sharesCanvas = true }
+            Button(codexText("Allow canvas sharing")) { chat.sharesCanvas = chat.profile.supportsImages }
         } message: {
             Text(codexText("Codex may send a 1024px preview of this document to the signed-in model provider. Original image metadata and the .comp package are not attached. Turn this off at any time."))
         }
-        .popover(isPresented: $showsSettings) { connectionSettings.frame(width: 380).padding(18) }
+        .popover(isPresented: $showsSettings) {
+            ScrollView { connectionSettings.padding(18) }.frame(width: 400, height: 520)
+        }
+        .sheet(isPresented: $showsProfiles) { ModelProfilesView(chat: chat) }
+    }
+    private var profileSelector: some View {
+        HStack(spacing: 8) {
+            Picker(codexText("Service"), selection: Binding(get: { chat.profile.id }, set: { id in
+                if let profile = profiles.profile(id) { chat.selectProfile(profile) }
+            })) {
+                ForEach(profiles.profiles) { Text($0.name).tag($0.id) }
+            }.labelsHidden().frame(maxWidth: .infinity)
+            Button { showsProfiles = true } label: { Image(systemName: "slider.horizontal.3") }
+                .buttonStyle(.plain).help(codexText("Model profiles"))
+        }.disabled(!chat.canChangeProfile).padding(.horizontal, 14).padding(.bottom, 10)
     }
     private var header: some View {
         HStack(spacing: 8) {
@@ -86,7 +103,7 @@ struct AIChatPanel: View {
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(codexText("Edit photos through conversation")).font(.headline)
-            Text(codexText("Connect Codex, sign in, and describe the change. Edits run through the editor and can be undone."))
+            Text(codexText("Choose a service, connect, and describe the change. Configure DeepSeek or another provider in Model profiles. Edits can be undone."))
                 .font(.callout).foregroundStyle(.secondary)
             Button(codexText("Connect Codex")) { perform { try await chat.connect(); showsSettings = true } }
                 .disabled(chat.isConnecting)
@@ -100,7 +117,8 @@ struct AIChatPanel: View {
         VStack(alignment: .leading, spacing: 6) {
             Toggle(codexText("Share canvas preview"), isOn: Binding(get: { chat.sharesCanvas }, set: { value in
                 if value { confirmsSharing = true } else { chat.sharesCanvas = false }
-            }))
+            })).disabled(!chat.profile.supportsImages)
+            if !chat.profile.supportsImages { Text(codexText("Image input is disabled for this model.")).foregroundStyle(.secondary) }
             Toggle(codexText("Confirm each image edit"), isOn: $chat.asksBeforeEdits).disabled(chat.isRunning)
         }.toggleStyle(.checkbox).font(.caption).padding(.horizontal, 12).padding(.vertical, 10)
     }
@@ -136,6 +154,7 @@ struct AIChatPanel: View {
     private var connectionSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(codexText("Codex connection")).font(.headline)
+            AppearancePicker()
             CodexPreferencesForm()
             Text(status).font(.caption)
             if !chat.serverVersion.isEmpty { Text(chat.serverVersion).font(.caption2).textSelection(.enabled) }
@@ -145,7 +164,15 @@ struct AIChatPanel: View {
                 }.disabled(chat.isRunning || chat.isExecutingTool || chat.isConnecting)
                 if chat.isConnected { Button(codexText("Disconnect")) { chat.disconnect() } }
             }
-            if chat.isAuthenticated {
+            if chat.profile.isAPI {
+                Text(chat.profile.name).font(.headline)
+                Text(chat.profile.baseURL).font(.caption).textSelection(.enabled)
+                Text(chat.profile.model).font(.caption.monospaced())
+                Button(codexText("Edit service and model…")) { showsSettings = false; showsProfiles = true }
+                    .disabled(!chat.canChangeProfile)
+                Text(codexText("Connected means the local Codex process is ready. Test the API key in Model profiles."))
+                    .font(.caption2).foregroundStyle(.secondary)
+            } else if chat.isAuthenticated {
                 Text(chat.accountLabel).font(.caption).textSelection(.enabled)
                 Button(codexText("Sign out")) { perform { try await chat.signOut() } }.disabled(chat.isRunning)
             } else {
@@ -159,11 +186,18 @@ struct AIChatPanel: View {
                     }.disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || chat.isConnecting)
                 }
             }
-            if !chat.models.isEmpty {
-                Picker(codexText("Model"), selection: $chat.modelID) {
-                    ForEach(chat.models) { Text($0.title).tag($0.id) }
-                }.disabled(chat.isRunning)
-            } else { TextField(codexText("Model (automatic when empty)"), text: $chat.modelID).disabled(chat.isRunning) }
+            if !chat.profile.isAPI {
+                if !chat.models.isEmpty {
+                    Picker(codexText("Model"), selection: Binding(get: { chat.modelID }, set: { chat.selectModel($0) })) {
+                        ForEach(chat.models) { Text($0.title).tag($0.id) }
+                    }.disabled(!chat.canChangeProfile)
+                } else {
+                    TextField(codexText("Model (automatic when empty)"), text: Binding(get: { chat.modelID }, set: { chat.selectModel($0) }))
+                        .disabled(!chat.canChangeProfile)
+                }
+            }
+            Button(codexText("Model profiles")) { showsSettings = false; showsProfiles = true }
+                .disabled(!chat.canChangeProfile)
             Text(codexText("The model list is a catalog, not a guarantee of account access. Authentication is managed by Codex in a separate local home."))
                 .font(.caption2).foregroundStyle(.secondary)
         }

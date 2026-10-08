@@ -57,7 +57,7 @@ struct ColorRangeSheet: View {
             if let picture = edit?.preview { Image(decorative: picture, scale: 2).resizable() }
         }
         .frame(width: size.width * scale, height: size.height * scale)
-        .overlay { Rectangle().strokeBorder(.white.opacity(0.2)) }
+        .overlay { Rectangle().strokeBorder(Color.primary.opacity(0.2)) }
         .frame(maxWidth: .infinity)
     }
 

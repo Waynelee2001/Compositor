@@ -20,7 +20,7 @@ struct LevelsSheet: View {
                 ForEach(LevelsChannel.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }.frame(width: 180)
             VStack(spacing: 0) {
-                histogram.frame(height: 150).background(.black.opacity(0.25))
+                histogram.frame(height: 150).background(EditorPalette.graphColor)
                     .overlay(alignment: .topLeading) {
                         if edit?.histogramReady != true { Text("Loading histogram…").font(.caption).padding(8) }
                     }

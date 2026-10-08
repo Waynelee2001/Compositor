@@ -997,7 +997,7 @@ private final class LayerCell: NSTableCellView, NSTextFieldDelegate {
         thumbnail.layer?.borderWidth = active && !mask ? 2 : 0
         maskThumbnail.layer?.borderWidth = active && mask ? 2 : 0
         // Shown alone on the canvas, the mask is outlined in white rather than the accent.
-        if active, session?.maskAloneLayer?.id == layerID { maskThumbnail.layer?.borderColor = NSColor.white.cgColor }
+        if active, session?.maskAloneLayer?.id == layerID { maskThumbnail.layer?.borderColor = NSColor.labelColor.cgColor }
     }
     /// Types the layer's name in the row: Return keeps it, Escape leaves it as it was, as does clicking away.
     func beginRenaming() {
@@ -1327,7 +1327,7 @@ extension LayerThumbnailButton {
 private final class RowEdgeLine: NSView {
     override func draw(_ dirtyRect: NSRect) {
         let scale = window?.backingScaleFactor ?? 2
-        NSColor.white.withAlphaComponent(0.06).setFill()
+        NSColor.labelColor.withAlphaComponent(0.06).setFill()
         NSRect(x: 0, y: 0, width: bounds.width, height: 1 / scale).fill()
     }
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
