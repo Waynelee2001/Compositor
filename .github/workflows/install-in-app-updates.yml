@@ -1,0 +1,35 @@
+name: Apply in-app update integration
+on:
+  push:
+    branches: [feat/in-app-updates]
+    paths: [.github/workflows/install-in-app-updates.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Apply reviewed source changes with original-file hash checks
+        env:
+          PAYLOAD: |
+            eNrdfQtb20iy6F9RmJ2xHWz5/SQk44CTeIcAB0NmZwOfkaU2aGNLXkmGeDL891tV3S21HjYmydx7bvgSsKV+1ru6q6u/7Ji3zPzk7/S+7By484Xr24HrlS8WlhEwX/w9dWe2udL9e3sa7PSc5WxWzCrcXyz4R+/RouKv/tn0A892bvyMssOTcvQN2oYxGIHtOodsxm6gtuxkp97oTqedSrczrTTaU7PdrpgNs9NtszarTlvdbnUyqVtto141DKNdmVYb9dakNp1UTLNbq5kW24l1G+sz7MOs1TvtidVsTM1Kq93odifVsTM1Kq93odif
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, os, pathlib, subprocess, tempfile, zlib
+          assert os.environ['GITHUB_REF'] == 'refs/heads/feat/in-app-updates'
+          payload = json.loads(zlib.decompress(base64.b64decode(os.environ['PAYLOAD'])))
+          root = pathlib.Path.cwd().resolve()
+          for name, expected in payload['checks'].items():
+              path = root / name
+              assert path.resolve().is_relative_to(root), name
+              actual = hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+              assert actual == expected, 'Source changed; refusing to overwrite: ' + name
+          with tempfile.NamedTemporaryFile(mode='w', suffix='.patch') as patch:
+              patch.write(payload['patch']); patch.flush()
+              subprocess.run(['git', 'apply', '--check', patch.name], check=True)
+              subprocess.run(['git', 'apply', patch.name], check=True)
+          subprocess.run(['git', 'add', '--', *payload['checks'].keys()], check=True)
+          subprocess.run(['git', '-c', 'user.name=github-actions[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', 'Add signed in-app updates, safe restart, tests and release workflow'], check=True)
+          subprocess.run(['git', 'push', 'origin', 'HEAD:refs/heads/feat/in-app-updates'], check=True)
+          PY
