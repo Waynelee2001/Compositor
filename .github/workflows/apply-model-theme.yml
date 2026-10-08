@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
-      - name: Verify and apply the reviewed source diff
+      - name: Verify and apply non-workflow source changes
         run: |
           python3 - <<'PY'
           import base64, hashlib, lzma, subprocess
@@ -24,10 +24,11 @@ jobs:
           if hashlib.sha256(data).hexdigest() != expected:
               raise SystemExit('Source patch checksum mismatch')
           patch = lzma.decompress(data)
-          subprocess.run(['git', 'apply', '--check', '--binary'], input=patch, check=True)
-          subprocess.run(['git', 'apply', '--index', '--binary'], input=patch, check=True)
+          # Workflow edits use the owner's connector separately, never this Actions token.
+          subprocess.run(['git', 'apply', '--check', '--binary', '--exclude=.github/workflows/*'], input=patch, check=True)
+          subprocess.run(['git', 'apply', '--index', '--binary', '--exclude=.github/workflows/*'], input=patch, check=True)
           PY
-          git rm .migration/model-theme.part01 .migration/model-theme.part02 .migration/model-theme.part03 .migration/model-theme.part04 .github/workflows/apply-model-theme.yml
+          git rm .migration/model-theme.part01 .migration/model-theme.part02 .migration/model-theme.part03 .migration/model-theme.part04
           git diff --cached --check
           git diff --cached --stat
           git config user.name 'github-actions[bot]'
