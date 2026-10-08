@@ -1,0 +1,21 @@
+name: Provider and Theme Source Audit
+on:
+  push:
+    branches: [feat/model-profiles-and-themes]
+    paths: [.github/workflows/provider-theme-audit.yml]
+permissions:
+  contents: read
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Export tracked source only
+        run: git archive --format=zip --output=Compositor-source-audit.zip HEAD
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Compositor-source-audit
+          path: Compositor-source-audit.zip
+          retention-days: 1
