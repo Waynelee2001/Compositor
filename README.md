@@ -1,9 +1,13 @@
 # Compositor AI update feed
 
-This persistent branch contains the signed update catalog for the AI edition with bundle identifier com.waynelee.compositor.codex. It is separate from main and the upstream Compositor distribution.
+This persistent branch hosts the update catalog for the AI edition, bundle identifier com.waynelee.compositor.codex. It is separate from main and the upstream distribution.
 
-Do not delete this branch or overwrite advertised release assets. New entries are published by the signed-release workflow only after the matching Codex Integration artifact succeeds and passes identity, signature and checksum checks.
+The feed currently has no published releases. An empty feed is not proof that the owner signing key has been provisioned. The initial signing setup must be completed before distributing the first permanent update-enabled installer.
 
-Public Ed25519 key: +2rKo6EKXYu2Z3Usv+6U7AQb8OoN0Wk2phRCmLzUV9w=
+The authoritative public key is Config/SparklePublicKey.txt on the release source branch (currently feat/in-app-updates); it must match Compositor/Updates/UpdatePolicy.swift and the packaged Info.plist. Do not copy a preliminary key out of a README. Never commit its private seed.
 
-Never commit the matching private key. The first update-enabled version must be installed once manually; later signed releases use the in-app updater.
+Do not delete this branch or overwrite advertised release assets. New entries are published only after a successful matching Codex Integration artifact passes identity, signature and checksum validation. A code push alone does not publish an update.
+
+The owner-only bootstrap script is scripts/setup_update_signing.swift on feat/in-app-updates. It operates only on an unpublished channel and stores the signing seed in the owner's Mac Keychain and the repository Actions secret. It must not be run to rotate keys after releases have been advertised.
+
+Install the first signed-channel installer manually once. Subsequent published releases use Settings > Updates. Current development packages are not Apple-notarized.
