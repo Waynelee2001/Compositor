@@ -247,7 +247,7 @@ private struct NewTabDropSlot: View {
         Label("New", systemImage: "plus")
             .font(.system(size: 12, weight: .medium))
             .padding(.horizontal, 14).frame(height: 28)
-            .background(targeted ? Color.accentColor.opacity(0.3) : Color.white.opacity(0.04), in: Capsule())
+            .background(targeted ? Color.accentColor.opacity(0.3) : Color.primary.opacity(0.04), in: Capsule())
             .overlay(Capsule().strokeBorder(targeted ? Color.accentColor : Color.secondary,
                 style: StrokeStyle(lineWidth: targeted ? 2 : 1, dash: targeted ? [] : [4, 3])))
             .contentShape(Capsule())
@@ -273,8 +273,8 @@ private struct OverflowTabsPill: View {
         .padding(.horizontal, 11)
         .frame(height: 28)
         .opacity(workspace.canSwitch ? 1 : 0.5)
-        .background(Color.white.opacity(0.035), in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+        .background(Color.primary.opacity(0.035), in: Capsule())
+        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 1))
         // A SwiftUI Menu draws its own label, chevron first; this keeps the pill reading "3 more tabs ⌄".
         .overlay(OverflowMenuAnchor(label: label) {
             guard workspace.canSwitch else { return [] }
@@ -364,8 +364,8 @@ private struct ProjectTabButton: View {
                 .accessibilityLabel(closeLabel)
         }
         .frame(height: 28)
-        .background(targeted ? Color.accentColor.opacity(0.3) : Color.white.opacity(active ? 0.12 : 0.035), in: Capsule())
-        .overlay(Capsule().strokeBorder(targeted ? Color.accentColor : Color.white.opacity(active ? 0.22 : 0.08), lineWidth: targeted ? 2 : 1))
+        .background(targeted ? Color.accentColor.opacity(0.3) : Color.primary.opacity(active ? 0.12 : 0.035), in: Capsule())
+        .overlay(Capsule().strokeBorder(targeted ? Color.accentColor : Color.primary.opacity(active ? 0.22 : 0.08), lineWidth: targeted ? 2 : 1))
         .help(dropHelp)
         .onDrop(of: [UTType.fileURL.identifier, UTType.image.identifier, ProjectWorkspace.layerType], delegate:
             ProjectTabDropDelegate(workspace: workspace, destination: tab.id, targeted: $targeted))

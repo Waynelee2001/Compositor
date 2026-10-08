@@ -23,7 +23,8 @@ final class CodexRPCConnection {
     private var pending: [String: Pending] = [:]
     var isRunning: Bool { child?.process.isRunning == true }
 
-    func launch(executable: URL, home: URL, workspace: URL) throws {
+    func launch(executable: URL, home: URL, workspace: URL, additionalArguments: [String] = [],
+                environmentOverrides: [String: String] = [:]) throws {
         disconnect()
         let child = CodexChildProcess()
         self.child = child
@@ -36,7 +37,7 @@ final class CodexRPCConnection {
             "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false",
             "-c", "features.unified_exec=false", "-c", "features.apply_patch_freeform=false",
             "-c", "features.apps=false", "-c", "features.plugins=false", "-c", "mcp_servers={}",
-            "-c", "cli_auth_credentials_store=\"file\""]
+            "-c", "cli_auth_credentials_store=\"file\""] + additionalArguments
         let inherited = ProcessInfo.processInfo.environment
         let allowed = ["PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "TMPDIR",
                        "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "SSL_CERT_FILE", "SSL_CERT_DIR"]
@@ -44,6 +45,7 @@ final class CodexRPCConnection {
         environment["CODEX_HOME"] = home.path
         environment["PATH"] = [executable.deletingLastPathComponent().path,
                                "/opt/homebrew/bin", "/usr/local/bin", environment["PATH"] ?? "/usr/bin:/bin"].joined(separator: ":")
+        for (key, value) in environmentOverrides where key == "COMPOSITOR_PROVIDER_API_KEY" { environment[key] = value }
         process.environment = environment
         process.standardInput = child.input
         process.standardOutput = child.output

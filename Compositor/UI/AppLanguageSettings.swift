@@ -62,10 +62,11 @@ struct AppLanguageSettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
             }.padding(20).tabItem { Label("Codex", systemImage: "sparkles") }
-        }.padding(12).frame(width: 520, height: 310)
+        }.padding(12).frame(width: 520, height: 380)
     }
     private var languageForm: some View {
         Form {
+            AppThemePicker()
             Picker("Application Language", selection: language) {
                 ForEach(AppLanguage.allCases) { language in Text(language.displayName).tag(language) }
             }.pickerStyle(.menu)

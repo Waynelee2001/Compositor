@@ -48,7 +48,7 @@ struct JPEGExportSheet: View {
             // Closer to the title row than the rest of the dialog's spacing.
             .padding(.bottom, -8)
             ZStack {
-                Color(white: 0.12)
+                Color(nsColor: AppChrome.canvas)
                 if let result {
                     JPEGPreview(image: result.preview, pixelWidth: raster.image.width, pixelHeight: raster.image.height, zoom: $zoom)
                 }
