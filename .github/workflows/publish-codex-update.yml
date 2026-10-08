@@ -1,0 +1,24 @@
+name: Publish signed Compositor AI update
+on:
+  push:
+    branches: [feat/in-app-updates]
+    paths: [release/codex.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: compositor-ai-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'Waynelee2001/Compositor'
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Publish a previously verified artifact without rebuilding or changing main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: python3 scripts/publish_codex_update.py release/codex.json

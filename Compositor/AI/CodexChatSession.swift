@@ -61,6 +61,7 @@ final class AgentChatSession {
     @ObservationIgnored private var stopTimer: Task<Void, Never>?
 
     init() {
+        UpdateActivity.register(self)
         if !providerProfile.isCodex { modelID = providerProfile.model }
         rpc.onNotification = { [weak self] method, params in self?.notification(method, params) }
         rpc.onRequest = { [weak self] id, method, params in self?.serverRequest(id, method, params) }
@@ -210,6 +211,10 @@ final class AgentChatSession {
         loginID = nil
     }
     func send(using session: EditorSession) async {
+        guard !UpdateActivity.preparingRestart else {
+            errorMessage = updateText("The app is preparing to restart for an update. Cancel the restart before sending another message.")
+            return
+        }
         bind(to: session)
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !isRunning, !isConnecting, !isExecutingTool else { return }
