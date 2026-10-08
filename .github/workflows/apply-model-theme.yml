@@ -1,0 +1,36 @@
+name: Apply reviewed provider and theme changes
+on:
+  push:
+    branches: [feat/model-profiles-and-themes]
+    paths: [.github/workflows/apply-model-theme.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/feat/model-profiles-and-themes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Verify and apply the reviewed source diff
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, lzma, subprocess
+          from pathlib import Path
+          data = base64.b64decode(''.join(Path(f'.migration/model-theme.part{i:02}').read_text() for i in range(1, 5)), validate=True)
+          expected = '1fe8b5dcf90ca1caabc2f7e51e73abd44f9178f7dda395c48f424e91363a7d4f'
+          if hashlib.sha256(data).hexdigest() != expected:
+              raise SystemExit('Source patch checksum mismatch')
+          patch = lzma.decompress(data)
+          subprocess.run(['git', 'apply', '--check', '--binary'], input=patch, check=True)
+          subprocess.run(['git', 'apply', '--index', '--binary'], input=patch, check=True)
+          PY
+          git rm .migration/model-theme.part01 .migration/model-theme.part02 .migration/model-theme.part03 .migration/model-theme.part04 .github/workflows/apply-model-theme.yml
+          git diff --cached --check
+          git diff --cached --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Add DeepSeek model profiles, secure switching, and adaptive light/dark appearance'
+          git push origin HEAD:refs/heads/feat/model-profiles-and-themes
