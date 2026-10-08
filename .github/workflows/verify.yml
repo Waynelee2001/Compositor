@@ -56,7 +56,7 @@ jobs:
           -resultBundlePath ParallelResults.xcresult
           -parallel-testing-enabled YES
           -skip-testing:CompositorTests/FloatingPanelTests
-          -skip-testing:CompositorTests/SliderSnapTests
+          -skip-testing:CompositorTests/SliderSnapTests -skip-testing:CompositorTests/ProviderThemeVisualTests
 
       - name: Run window tests serially
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
