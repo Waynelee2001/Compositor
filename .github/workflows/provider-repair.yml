@@ -1,0 +1,25 @@
+name: Apply Provider Repair
+on:
+  push:
+    branches: [feat/providers-and-themes]
+    paths: [.github/workflows/provider-repair.yml, scripts/apply-provider-repair.py]
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: github.ref == 'refs/heads/feat/providers-and-themes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Apply reviewed source repair and remove temporary tooling
+        run: |
+          set -euo pipefail
+          python3 scripts/apply-provider-repair.py
+          git diff --check
+          git rm scripts/apply-provider-repair.py .github/workflows/provider-repair.yml
+          git add Compositor CompositorTests docs .github/workflows/providers-themes.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Fix custom provider catalogs, CPU/GPU theme parity, and endpoint-scoped credentials'
+          git push origin HEAD:refs/heads/feat/providers-and-themes
+          git rev-parse HEAD
