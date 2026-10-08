@@ -61,11 +61,12 @@ struct AppLanguageSettingsView: View {
                 Text(codexText("Use the AI sidebar settings to connect, sign in, and choose a model."))
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
-            }.padding(20).tabItem { Label("Codex", systemImage: "sparkles") }
-        }.padding(12).frame(width: 520, height: 310)
+            }.padding(20).tabItem { Label(codexText("AI service"), systemImage: "sparkles") }
+        }.padding(12).frame(width: 540, height: 360).modifier(AppAppearanceModifier())
     }
     private var languageForm: some View {
         Form {
+            AppearancePicker()
             Picker("Application Language", selection: language) {
                 ForEach(AppLanguage.allCases) { language in Text(language.displayName).tag(language) }
             }.pickerStyle(.menu)

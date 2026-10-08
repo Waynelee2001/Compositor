@@ -1,4 +1,7 @@
 import Foundation
+#if os(macOS)
+import Darwin
+#endif
 
 /// One app-owned `codex app-server` child; stdout contains JSONL only.
 /// No terminal scraping, HTTP listener, or MCP bridge is involved.
@@ -23,7 +26,7 @@ final class CodexRPCConnection {
     private var pending: [String: Pending] = [:]
     var isRunning: Bool { child?.process.isRunning == true }
 
-    func launch(executable: URL, home: URL, workspace: URL) throws {
+    func launch(executable: URL, home: URL, workspace: URL, profile: ModelProfile = .account, apiKey: String? = nil) throws {
         disconnect()
         let child = CodexChildProcess()
         self.child = child
@@ -44,7 +47,20 @@ final class CodexRPCConnection {
         environment["CODEX_HOME"] = home.path
         environment["PATH"] = [executable.deletingLastPathComponent().path,
                                "/opt/homebrew/bin", "/usr/local/bin", environment["PATH"] ?? "/usr/bin:/bin"].joined(separator: ":")
+        if profile.isAPI {
+            let catalog = home.appendingPathComponent("models.json")
+            try ModelProviderConfiguration.catalog(profile, instructions: CodexConfiguration.instructions).data().write(to: catalog, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: catalog.path)
+            process.arguments! += try ModelProviderConfiguration.overrides(profile, catalogURL: catalog, usesKey: apiKey?.isEmpty == false)
+            if let apiKey, !apiKey.isEmpty { environment[ModelProviderConfiguration.credentialEnvironmentKey] = apiKey }
+        }
         process.environment = environment
+        #if os(macOS)
+        // A disconnected helper must not terminate the editor with SIGPIPE.
+        guard fcntl(child.input.fileHandleForWriting.fileDescriptor, F_SETNOSIGPIPE, 1) != -1 else {
+            disconnect(); throw CodexRuntimeError(message: "Could not prepare the Codex connection.")
+        }
+        #endif
         process.standardInput = child.input
         process.standardOutput = child.output
         process.standardError = child.errors

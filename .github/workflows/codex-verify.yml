@@ -2,7 +2,7 @@ name: Codex Integration
 
 on:
   push:
-    branches: [feat/codex-app-server-ui]
+    branches: [feat/codex-app-server-ui, feat/model-profiles-and-themes]
   workflow_dispatch:
 
 permissions:
@@ -27,6 +27,10 @@ jobs:
         run: python3 scripts/prepare_codex_binary.py --out .codex-ci
       - name: Real Codex protocol smoke test (no account or inference)
         run: python3 scripts/codex_protocol_smoke.py --codex .codex-ci/codex
+      - name: Custom provider and image-tool round trip (local mock, no inference fees)
+        run: |
+          swiftc Compositor/AI/CodexWire.swift Compositor/AI/ModelProfile.swift scripts/emit_provider_fixture.swift -o .codex-ci/emit-provider-fixture
+          python3 scripts/provider_protocol_smoke.py --codex .codex-ci/codex --fixture .codex-ci/emit-provider-fixture
       - name: Resolve pinned Swift packages
         run: >
           xcodebuild -resolvePackageDependencies -project Compositor.xcodeproj
@@ -45,7 +49,7 @@ jobs:
             -configuration Codex -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath DerivedDataCodex -resultBundlePath CodexParallel.xcresult \
             -parallel-testing-enabled YES -skip-testing:CompositorTests/FloatingPanelTests \
-            -skip-testing:CompositorTests/SliderSnapTests 2>&1 | tee codex-tests.log
+            -skip-testing:CompositorTests/SliderSnapTests -skip-testing:CompositorTests/ProviderThemeVisualTests 2>&1 | tee codex-tests.log
       - name: Window tests serially
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: >
@@ -54,6 +58,19 @@ jobs:
           -derivedDataPath DerivedDataCodex -resultBundlePath CodexSerial.xcresult
           -parallel-testing-enabled NO -only-testing:CompositorTests/FloatingPanelTests
           -only-testing:CompositorTests/SliderSnapTests
+      - name: Theme previews and exported-image integrity
+        run: >
+          xcodebuild test-without-building -project Compositor.xcodeproj -scheme Compositor-Codex
+          -configuration Codex -destination 'platform=macOS,arch=arm64'
+          -derivedDataPath DerivedDataCodex -resultBundlePath CodexThemes.xcresult
+          -parallel-testing-enabled NO -only-testing:CompositorTests/ProviderThemeVisualTests
+      - name: Upload light and dark UI previews
+        uses: actions/upload-artifact@v7
+        with:
+          name: Compositor-theme-previews
+          path: /tmp/CompositorThemePreview/*.png
+          retention-days: 7
+          if-no-files-found: error
       - name: Package ad-hoc development app (not notarized)
         run: |
           set -euo pipefail

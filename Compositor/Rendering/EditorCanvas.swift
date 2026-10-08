@@ -858,12 +858,16 @@ final class CanvasView: NSView {
         }
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance(); needsDisplay = true
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         // The grid and a text frame being dragged follow the pixels under them.
         if lines.frame != bounds { lines.frame = bounds }
         lines.needsDisplay = true
         if drawOnGPU(dirtyRect) { return }
-        NSColor(white: 0.105, alpha: 1).setFill()
+        EditorPalette.canvas.setFill()
         dirtyRect.fill()
         guard let document = session.document,
               let context = NSGraphicsContext.current?.cgContext else { return }
@@ -875,12 +879,12 @@ final class CanvasView: NSView {
         context.saveGState()
         context.setShadow(offset: CGSize(width: 0, height: 3), blur: 14,
                           color: NSColor.black.withAlphaComponent(0.35).cgColor)
-        context.setFillColor(NSColor(white: 0.26, alpha: 1).cgColor)
+        context.setFillColor(EditorPalette.checkerA.cgColor)
         context.fill(rect)
         context.restoreGState()
         context.saveGState()
         context.clip(to: rect.intersection(dirtyRect))
-        context.setFillColor(NSColor(white: 0.30, alpha: 1).cgColor)
+        context.setFillColor(EditorPalette.checkerB.cgColor)
         context.fill(rect)
         // Work scales with the visible viewport, not document dimensions.
         let tile: CGFloat = 10
@@ -890,7 +894,7 @@ final class CanvasView: NSView {
             let maxX = Int(ceil((visible.maxX - rect.minX) / tile))
             let minY = Int(floor((visible.minY - rect.minY) / tile))
             let maxY = Int(ceil((visible.maxY - rect.minY) / tile))
-            context.setFillColor(NSColor(white: 0.35, alpha: 1).cgColor)
+            context.setFillColor(EditorPalette.canvasBorder.cgColor)
             for row in minY..<maxY {
                 for column in minX..<maxX where (row + column).isMultiple(of: 2) {
                     context.fill(CGRect(x: rect.minX + CGFloat(column) * tile,
