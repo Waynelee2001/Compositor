@@ -1,0 +1,75 @@
+name: Apply Viewport Parity Fix
+on:
+  push:
+    branches: [feat/providers-and-appearance]
+    paths: [.github/workflows/apply-chrome-fix.yml]
+permissions:
+  contents: read
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/feat/providers-and-appearance'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Apply only against the inspected source blobs
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess
+          expected = {
+              'Compositor/Rendering/EditorCanvas.swift': '9dd7428c865794922ca8cc3359d8c7b649ca649c',
+              'CompositorTests/GPUCanvasTests.swift': '9488d3d51f1525944e2dd46fdd6cf805ba731ba8',
+          }
+          for path, blob in expected.items():
+              actual = subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+              if actual != blob:
+                  raise SystemExit('Source changed; refusing to apply patch: ' + path)
+          p = Path('Compositor/Rendering/EditorCanvas.swift')
+          s = p.read_text()
+          a = s.index('        func gray(_ white: CGFloat, alpha: CGFloat = 1) -> CIImage {', s.index('    private func gpuFrame('))
+          b = s.index('        // From 200%', a)
+          s = s[:a] + '''        guard let chrome = GPUCanvasChrome.images(size: size, documentRect: rect,
+                                                    scale: device, appearance: effectiveAppearance),
+                        let background = renderer.image(chrome.background, transient: true),
+                        let border = renderer.image(chrome.border, transient: true) else { return nil }
+                  var frame = background
+                  guard rect.intersects(full) else { return frame }
+          '''.replace('\n                  ', '\n        ').replace('\n                        ', '\n              ') + s[b:]
+          a = s.index("        // The document's edge: a one-pixel line centered on it.", a)
+          b = s.index('        return frame.cropped(to: full)', a)
+          s = s[:a] + '        frame = border.composited(over: frame)\n' + s[b:]
+          p.write_text(s)
+          p = Path('CompositorTests/GPUCanvasTests.swift')
+          s = p.read_text().replace('backingScale: Int = 2, inWindow: Bool = false) throws -> Difference {', 'backingScale: Int = 2, inWindow: Bool = false, appearance: NSAppearance? = nil) throws -> Difference {', 1)
+          s = s.replace('        let canvas = CanvasView(session: session)\n', '        let canvas = CanvasView(session: session)\n        canvas.appearance = appearance\n', 1)
+          a = s.index('    @Test(arguments: [1.0,')
+          test = '\n'.join([
+              '    /// Transparent documents expose decoration differences that an opaque image hides.',
+              '    @Test(arguments: [false, true])',
+              '    func canvasChromeMatchesInBothThemes(dark: Bool) throws {',
+              '        guard GPUCanvasRenderer.shared != nil else { return }',
+              '        let session = EditorSession()',
+              '        session.viewport.resize(to: CGSize(width: 500, height: 400), backingScale: 2, documentSize: nil)',
+              '        session.createDocument(width: 600, height: 500)',
+              '        session.zoom(to: 1)',
+              '        let appearance = try #require(NSAppearance(named: dark ? .darkAqua : .aqua))',
+              '        let difference = try compare(session, name: dark ? "chrome-dark" : "chrome-light", appearance: appearance)',
+              '        #expect(difference.mean < 1.5 && difference.over < 0.005,',
+              '                "mean \\(difference.mean), over 12 levels \\(difference.over * 100)%")',
+              '    }', '', ''
+          ])
+          p.write_text(s[:a] + test + s[a:])
+      - name: Commit only the two verified source changes without force
+        run: |
+          set -euo pipefail
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Compositor/Rendering/EditorCanvas.swift CompositorTests/GPUCanvasTests.swift
+          git commit -m 'Fix light-theme GPU viewport decoration without changing document rendering'
+          git push origin HEAD:refs/heads/feat/providers-and-appearance
