@@ -38,13 +38,14 @@ struct AIChatPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            AIProviderPicker(chat: chat).padding(.horizontal, 12).padding(.bottom, 8)
             Divider()
             AIConversation(token: scrollToken, style: .compact) {
                 if chat.transcript.items.isEmpty { welcome }
                 ForEach(chat.transcript.items) { item in CodexMessageRow(item: item) }
             }
             if let error = chat.errorMessage {
-                Text(codexText(error)).font(.caption).foregroundStyle(.red)
+                Text(providerText(codexText(error))).font(.caption).foregroundStyle(.red)
                     .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(12)
             }
             if let approval = chat.approval { approvalView(approval) }
@@ -69,9 +70,12 @@ struct AIChatPanel: View {
             Button(codexText("Cancel"), role: .cancel) { }
             Button(codexText("Allow canvas sharing")) { chat.sharesCanvas = true }
         } message: {
+            Text(chat.providerProfile.name + (chat.providerProfile.baseURL.isEmpty ? "" : " · " + chat.providerProfile.baseURL))
             Text(codexText("Codex may send a 1024px preview of this document to the signed-in model provider. Original image metadata and the .comp package are not attached. Turn this off at any time."))
         }
-        .popover(isPresented: $showsSettings) { connectionSettings.frame(width: 380).padding(18) }
+        .popover(isPresented: $showsSettings) {
+            ScrollView { connectionSettings.padding(18) }.frame(width: 500, height: 650)
+        }
     }
     private var header: some View {
         HStack(spacing: 8) {
@@ -99,8 +103,8 @@ struct AIChatPanel: View {
     private var sharingControls: some View {
         VStack(alignment: .leading, spacing: 6) {
             Toggle(codexText("Share canvas preview"), isOn: Binding(get: { chat.sharesCanvas }, set: { value in
-                if value { confirmsSharing = true } else { chat.sharesCanvas = false }
-            }))
+                if value && chat.providerProfile.acceptsImages { confirmsSharing = true } else { chat.sharesCanvas = false }
+            })).disabled(!chat.providerProfile.acceptsImages)
             Toggle(codexText("Confirm each image edit"), isOn: $chat.asksBeforeEdits).disabled(chat.isRunning)
         }.toggleStyle(.checkbox).font(.caption).padding(.horizontal, 12).padding(.vertical, 10)
     }
@@ -135,8 +139,10 @@ struct AIChatPanel: View {
     }
     private var connectionSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(codexText("Codex connection")).font(.headline)
-            CodexPreferencesForm()
+            AIProviderSettings(chat: chat)
+            Divider()
+            AppThemePicker()
+            DisclosureGroup(codexText("Codex connection")) { CodexPreferencesForm() }
             Text(status).font(.caption)
             if !chat.serverVersion.isEmpty { Text(chat.serverVersion).font(.caption2).textSelection(.enabled) }
             HStack {
@@ -145,6 +151,7 @@ struct AIChatPanel: View {
                 }.disabled(chat.isRunning || chat.isExecutingTool || chat.isConnecting)
                 if chat.isConnected { Button(codexText("Disconnect")) { chat.disconnect() } }
             }
+            if chat.providerProfile.isCodex {
             if chat.isAuthenticated {
                 Text(chat.accountLabel).font(.caption).textSelection(.enabled)
                 Button(codexText("Sign out")) { perform { try await chat.signOut() } }.disabled(chat.isRunning)
@@ -159,11 +166,12 @@ struct AIChatPanel: View {
                     }.disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || chat.isConnecting)
                 }
             }
-            if !chat.models.isEmpty {
-                Picker(codexText("Model"), selection: $chat.modelID) {
+            }
+            if chat.providerProfile.isCodex, !chat.models.isEmpty {
+                Picker(codexText("Model"), selection: Binding(get: { chat.modelID }, set: { chat.selectModel($0) })) {
                     ForEach(chat.models) { Text($0.title).tag($0.id) }
                 }.disabled(chat.isRunning)
-            } else { TextField(codexText("Model (automatic when empty)"), text: $chat.modelID).disabled(chat.isRunning) }
+            } else if chat.providerProfile.isCodex { TextField(codexText("Model (automatic when empty)"), text: $chat.modelID).disabled(chat.isRunning) }
             Text(codexText("The model list is a catalog, not a guarantee of account access. Authentication is managed by Codex in a separate local home."))
                 .font(.caption2).foregroundStyle(.secondary)
         }

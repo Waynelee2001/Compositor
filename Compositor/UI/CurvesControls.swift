@@ -30,7 +30,7 @@ struct CurvesControls: View {
                     context.fill(Path(ellipseIn: CGRect(x: p.x-4, y: p.y-4, width: 8, height: 8)), with: .color(selected == i ? .accentColor : .white))
                 }
             }
-            .frame(height: 260).background(Color.black.opacity(0.35))
+            .frame(height: 260).background(Color(nsColor: AppChrome.plot))
             .contentShape(Rectangle())
             .overlay { GeometryReader { geometry in
                 Color.clear.contentShape(Rectangle()).gesture(DragGesture(minimumDistance: 0).onChanged { event in

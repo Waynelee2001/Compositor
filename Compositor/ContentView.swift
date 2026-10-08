@@ -128,7 +128,7 @@ struct ContentView: View {
     // Split again for 1.1: the chain outgrew the type checker once more.
     @ViewBuilder private var editorChrome: some View {
         editorStack
-        .background(Color(white: 0.14))
+        .background(Color(nsColor: AppChrome.panel))
         .background {
             if let applicationDelegate, applicationDelegate.projects.workspace == nil {
                 ProjectWindowBridge(controller: applicationDelegate.projects).frame(width: 0, height: 0)
@@ -162,7 +162,6 @@ struct ContentView: View {
             }
         }
         .onAppear { applicationDelegate?.showEditor = { openWindow(id: "editor") } }
-        .preferredColorScheme(.dark)
         .navigationTitle(session.projectURL?.deletingPathExtension().lastPathComponent ?? "Untitled")
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -315,11 +314,11 @@ struct ContentView: View {
                         else { Image(systemName: tool == .marquee && session.marqueeKind == .ellipse ? "circle.dashed" : session.symbol(for: tool)).font(.system(size: 17)) }
                     }
                     .frame(width: 36, height: 36)
-                        .background(session.tool == tool ? Color.white.opacity(0.12) : .clear,
+                        .background(session.tool == tool ? Color.primary.opacity(0.12) : .clear,
                                     in: RoundedRectangle(cornerRadius: 7))
                         .overlay {
                             RoundedRectangle(cornerRadius: 7)
-                                .strokeBorder(session.tool == tool ? Color.white.opacity(0.14) : .clear)
+                                .strokeBorder(session.tool == tool ? Color.primary.opacity(0.14) : .clear)
                         }
                         .contentShape(Rectangle())
                 }

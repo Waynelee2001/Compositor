@@ -36,7 +36,7 @@ struct CameraRawControls: View {
             ZStack {
                 graph(scope, mode: mode)
                     .frame(height: 110)
-                    .background(Color.black.opacity(0.35))
+                    .background(Color(nsColor: AppChrome.plot))
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 HStack {
                     clipButton(shadows: true)
@@ -73,7 +73,7 @@ struct CameraRawControls: View {
         } label: {
             Image(systemName: "triangle.fill")
                 .font(.caption2)
-                .foregroundStyle(on ? (shadows ? Color.blue : Color.red) : Color.white.opacity(0.55))
+                .foregroundStyle(on ? (shadows ? Color.blue : Color.red) : Color.primary.opacity(0.55))
         }
         .buttonStyle(.plain)
         .help(shadows ? "Show clipped shadows in blue on the preview." : "Show clipped highlights in red on the preview.")

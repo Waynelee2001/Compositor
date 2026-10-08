@@ -103,7 +103,7 @@ struct CameraRawCurveControls: View {
                 removePoint(at: value.location, in: size)
             })
         }
-        .background(Color.black.opacity(0.35))
+        .background(Color(nsColor: AppChrome.plot))
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 
@@ -346,7 +346,7 @@ struct CameraRawMixerControls: View {
                 } label: {
                     Circle().fill(Color(hue: CameraRawMixerSettings.centers[index] / 360, saturation: 0.8, brightness: 0.9))
                         .frame(width: 18, height: 18)
-                        .overlay { Circle().stroke(edit?.cameraRawMixerSwatch == index ? Color.white : Color.clear, lineWidth: 2) }
+                        .overlay { Circle().stroke(edit?.cameraRawMixerSwatch == index ? Color.primary : Color.clear, lineWidth: 2) }
                 }
                 .buttonStyle(.plain)
                 .help("Edit ".localizedUI + CameraRawMixerSettings.names[index].localizedUI + ".")
@@ -368,7 +368,7 @@ struct CameraRawMixerControls: View {
                     Button { session.filterEdit?.cameraRawPointIndex = index } label: {
                         Circle().fill(Color(hue: point.hue / 360, saturation: point.saturation, brightness: point.luminance))
                             .frame(width: 16, height: 16)
-                            .overlay { Circle().stroke(edit?.cameraRawPointIndex == index ? Color.white : Color.clear, lineWidth: 2) }
+                            .overlay { Circle().stroke(edit?.cameraRawPointIndex == index ? Color.primary : Color.clear, lineWidth: 2) }
                     }
                     .buttonStyle(.plain)
                     .help("Select this picked color.")

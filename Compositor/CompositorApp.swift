@@ -8,11 +8,15 @@ struct CompositorApp: App {
     @AppStorage("appLanguage") private var appLanguageRawValue = AppLanguage.system.rawValue
     private var appLanguage: AppLanguage { AppLanguage(rawValue: appLanguageRawValue) ?? .system }
 
+    @AppStorage(AppTheme.preferenceKey) private var appTheme = AppTheme.light.rawValue
+
     var body: some Scene {
         Window("Compositor", id: "editor") {
             ProjectWorkspaceView(applicationDelegate: applicationDelegate)
                 .roundedControls()
                 .environment(\.locale, appLanguage.locale)
+                .preferredColorScheme((AppTheme(rawValue: appTheme) ?? .light).colorScheme)
+                .onChange(of: appTheme) { _, _ in AppTheme.selected.apply() }
         }
             .defaultSize(width: 1180, height: 780)
             // Files opened from Finder or dropped on the Dock icon go to the app delegate, which imports them into
@@ -349,6 +353,8 @@ struct CompositorApp: App {
         Settings {
             AppLanguageSettingsView()
                 .environment(\.locale, appLanguage.locale)
+                .preferredColorScheme((AppTheme(rawValue: appTheme) ?? .light).colorScheme)
+                .onChange(of: appTheme) { _, _ in AppTheme.selected.apply() }
         }
     }
 }

@@ -24,7 +24,8 @@ final class CompositorApplicationDelegate: NSObject, NSApplicationDelegate {
         _ = try? event.sendEvent(options: .noReply, timeout: 1)
     }
     func applicationWillFinishLaunching(_ notification: Notification) {
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+        // AppKit menus and panels follow the same preference as SwiftUI.
+        AppTheme.selected.apply()
         SliderSnap.install()
     }
     func applicationDidFinishLaunching(_ notification: Notification) {
