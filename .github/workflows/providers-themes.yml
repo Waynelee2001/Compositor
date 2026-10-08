@@ -9,52 +9,12 @@ concurrency:
   group: providers-themes-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  source:
-    if: github.ref == 'refs/heads/feat/providers-and-themes'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      sha: ${{ steps.source.outputs.sha }}
-    steps:
-      - uses: actions/checkout@v7
-      - name: Apply verified development patch when present
-        id: source
-        shell: bash
-        run: |
-          set -euo pipefail
-          if test -f scripts/provider-theme.patch.0.b64; then
-            python3 - <<'PY'
-          import base64, hashlib, lzma, pathlib, subprocess
-          parts = sorted(pathlib.Path('scripts').glob('provider-theme.patch.*.b64'))
-          assert len(parts) == 4, 'Incomplete patch payload'
-          compressed = base64.b64decode(''.join(p.read_text().strip() for p in parts), validate=True)
-          assert hashlib.sha256(compressed).hexdigest() == 'cd982dd8e460c8b263b829c17d7a3b060bf0cac8640b2b5138bd8732a64557fb', 'Patch integrity failure'
-          patch = lzma.decompress(compressed)
-          assert len(patch) < 300000, 'Unexpected patch size'
-          target = pathlib.Path('/tmp/providers-themes.patch'); target.write_bytes(patch)
-          names = subprocess.check_output(['git', 'apply', '--numstat', str(target)], text=True)
-          for line in names.splitlines():
-              name = line.split('\t', 2)[2]
-              assert name.startswith(('Compositor/', 'CompositorTests/', 'Config/', 'docs/', 'scripts/')) and '..' not in pathlib.PurePosixPath(name).parts, name
-          subprocess.run(['git', 'apply', '--check', '--index', str(target)], check=True)
-          subprocess.run(['git', 'apply', '--index', str(target)], check=True)
-          PY
-            git rm scripts/provider-theme.patch.*.b64
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'Add DeepSeek and custom Responses providers, isolated switching, and global light/dark themes'
-            git push origin HEAD:refs/heads/feat/providers-and-themes
-          fi
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
   codex:
-    needs: source
     runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.source.outputs.sha }}
           persist-credentials: false
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.6.app
@@ -127,13 +87,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
   standard:
-    needs: source
     runs-on: macos-26
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.source.outputs.sha }}
           persist-credentials: false
       - run: sudo xcode-select -s /Applications/Xcode_26.6.app
       - run: xcodebuild -resolvePackageDependencies -project Compositor.xcodeproj -scheme Compositor -onlyUsePackageVersionsFromResolvedFile
